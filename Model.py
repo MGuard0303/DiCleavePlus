@@ -6,7 +6,7 @@ from torch import nn
 
 class TFModel(nn.Module):
     # noinspection PyTypeChecker
-    def __init__(self, input_dimension: int, hidden_feature: int, name: str = "DModel"):
+    def __init__(self, input_dimension: int, hidden_feature: int, name: str = "TFModel"):
         super().__init__()
         self.name = name
 
@@ -58,7 +58,7 @@ class TFModel(nn.Module):
         sequence = self.position_encoder(sequence)
         sequence = self.encoder_container(sequence)  # (L, B, D)
         sequence = torch.permute(input=sequence, dims=(1, 2, 0))
-        sequence = self.conv(sequence) # (B, D, L)
+        sequence = self.conv(sequence)  # (B, D, L)
         sequence = torch.permute(input=sequence, dims=(0, 2, 1))
 
         embed = pattern + sequence
