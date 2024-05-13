@@ -4,22 +4,22 @@ import torch
 from torch import nn
 
 
-class DModel(nn.Module):
+class TFModel(nn.Module):
     # noinspection PyTypeChecker
-    def __init__(self, hidden_feature: int, name: str = "DModel"):
+    def __init__(self, input_dimension: int, hidden_feature: int, name: str = "DModel"):
         super().__init__()
         self.name = name
 
         self.bn = nn.BatchNorm1d(num_features=hidden_feature)
 
-        self.gru = nn.GRU(input_size=13, hidden_size=hidden_feature, num_layers=1, dropout=0.5)
+        self.gru = nn.GRU(input_size=input_dimension, hidden_size=hidden_feature, num_layers=1, dropout=0.5)
 
-        self.encoder = nn.TransformerEncoderLayer(d_model=13, nhead=1, dim_feedforward=256)
+        self.encoder = nn.TransformerEncoderLayer(d_model=input_dimension, nhead=1, dim_feedforward=256)
         self.encoder_container = nn.TransformerEncoder(encoder_layer=self.encoder, num_layers=1,
                                                        enable_nested_tensor=False)
-        self.position_encoder = PositionEncoder(d_model=13, length=200)
+        self.position_encoder = PositionEncoder(d_model=input_dimension, length=200)
         self.conv = nn.Sequential(
-            nn.Conv1d(in_channels=13, out_channels=hidden_feature, kernel_size=7, padding=3),
+            nn.Conv1d(in_channels=input_dimension, out_channels=hidden_feature, kernel_size=7, padding=3),
             self.bn,
             nn.ReLU(),
             nn.Linear(in_features=200, out_features=14)

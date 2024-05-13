@@ -71,7 +71,7 @@ for fold in range(5):
     dl_tst = DataLoader(ds_tst, batch_size=128, shuffle=False)
 
     # Initial model
-    model = Model.DModel(hidden_feature=32)
+    model = Model.TFModel(input_dimension=13, hidden_feature=32)
     model.loss_function = torch.nn.NLLLoss()
     model.optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
     model.to(device)

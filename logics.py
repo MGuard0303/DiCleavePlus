@@ -9,7 +9,7 @@ import Model
 import utils
 
 
-def train_step(model: Model.DModel, pattern: torch.Tensor, sequence: torch.Tensor, label: torch.Tensor) -> tuple:
+def train_step(model: Model.TFModel, pattern: torch.Tensor, sequence: torch.Tensor, label: torch.Tensor) -> tuple:
     # Set to the training mode, dropout and batch normalization will work under this mode
     model.train()
     model.optimizer.zero_grad()  # Clear the gradient everytime
@@ -26,7 +26,7 @@ def train_step(model: Model.DModel, pattern: torch.Tensor, sequence: torch.Tenso
 
 
 @torch.no_grad()  # This decorator makes following function not calculate gradient
-def valid_step(model: Model.DModel, pattern: torch.Tensor, sequence: torch.Tensor, label: torch.Tensor) -> tuple:
+def valid_step(model: Model.TFModel, pattern: torch.Tensor, sequence: torch.Tensor, label: torch.Tensor) -> tuple:
     # Set to the evaluation mode, dropout and batch normalization will not work
     model.eval()
 
@@ -36,7 +36,7 @@ def valid_step(model: Model.DModel, pattern: torch.Tensor, sequence: torch.Tenso
     return lss.item(), pred
 
 
-def train(model: Model.DModel, train_loader: DataLoader, valid_loader: DataLoader, epochs: int, valid_per_epochs: int,
+def train(model: Model.TFModel, train_loader: DataLoader, valid_loader: DataLoader, epochs: int, valid_per_epochs: int,
           returns: bool = False) -> tuple:
     print(f"Model {model.name}: Start training...")
 
@@ -112,7 +112,7 @@ def train(model: Model.DModel, train_loader: DataLoader, valid_loader: DataLoade
 
 
 @torch.no_grad()
-def predict(model: Model.DModel, test_loader: DataLoader, returns: bool = False) -> tuple:
+def predict(model: Model.TFModel, test_loader: DataLoader, returns: bool = False) -> tuple:
     model.eval()
 
     total_tst_lss = 0.0
