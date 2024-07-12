@@ -30,9 +30,9 @@ with open("./dataset/rnafold/sec_vocab.pickle", "rb") as f:
 with open("dataset/rnafold/dataset/pre_processed.pickle", "rb") as f:
     pp = pickle.load(f)
 
-sequence_embedding = dmodel.EmbeddingLayer(hidden_feature=32, softmax_dim=1, is_sec=False)
-secondary_embedding = dmodel.EmbeddingLayer(hidden_feature=32, softmax_dim=1, is_sec=True)
-fusion_layer = dmodel.FusionLayer(hidden_feature=32, softmax_dim=1)
+sequence_embedding = dmodel.EmbeddingLayer(hidden_feature=32, softmax_dim=1, is_sec=False).to(device)
+secondary_embedding = dmodel.EmbeddingLayer(hidden_feature=32, softmax_dim=1, is_sec=True).to(device)
+fusion_layer = dmodel.FusionLayer(hidden_feature=32, softmax_dim=1).to(device)
 
 for fold in range(5):
     # Get training data and test data

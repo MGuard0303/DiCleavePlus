@@ -19,7 +19,7 @@ def train_step(mdl: dmodel.TFModel, sequence: torch.Tensor, pattern: torch.Tenso
     lss = mdl.loss_function(pred, label)
 
     # Backward propagation
-    lss.backward()
+    lss.backward(retain_graph=True)
     mdl.optimizer.step()  # Update the parameters of the model
 
     return lss.item(), pred  # loss is a one-element tensor, so it can use .item() method
