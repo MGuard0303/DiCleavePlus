@@ -5,44 +5,44 @@ import torch
 from torch.utils.data import DataLoader
 
 import metrics
-import Model
+import dmodel
 import utils
 
 
-def train_step(model: Model.TFModel, pattern: torch.Tensor, sequence: torch.Tensor, label: torch.Tensor) -> tuple:
+def train_step(mdl: dmodel.TFModel, sequence: torch.Tensor, pattern: torch.Tensor, label: torch.Tensor) -> tuple:
     # Set to the training mode, dropout and batch normalization will work under this mode
-    model.train()
-    model.optimizer.zero_grad()  # Clear the gradient everytime
+    mdl.train()
+    mdl.optimizer.zero_grad()  # Clear the gradient everytime
 
     # Forward propagation
-    pred = model(pattern=pattern, sequence=sequence)
-    lss = model.loss_function(pred, label)
+    pred = mdl(sequence=sequence, pattern=pattern)
+    lss = mdl.loss_function(pred, label)
 
     # Backward propagation
     lss.backward()
-    model.optimizer.step()  # Update the parameters of the model
+    mdl.optimizer.step()  # Update the parameters of the model
 
     return lss.item(), pred  # loss is a one-element tensor, so it can use .item() method
 
 
 @torch.no_grad()  # This decorator makes following function not calculate gradient
-def valid_step(model: Model.TFModel, pattern: torch.Tensor, sequence: torch.Tensor, label: torch.Tensor) -> tuple:
+def valid_step(mdl: dmodel.TFModel, sequence: torch.Tensor, pattern: torch.Tensor, label: torch.Tensor) -> tuple:
     # Set to the evaluation mode, dropout and batch normalization will not work
-    model.eval()
+    mdl.eval()
 
-    pred = model(pattern=pattern, sequence=sequence)
-    lss = model.loss_function(pred, label)
+    pred = mdl(sequence=sequence, pattern=pattern)
+    lss = mdl.loss_function(pred, label)
 
     return lss.item(), pred
 
 
-def train(model: Model.TFModel, train_loader: DataLoader, valid_loader: DataLoader, epochs: int, valid_per_epochs: int,
+def train(mdl: dmodel.TFModel, train_loader: DataLoader, valid_loader: DataLoader, epochs: int, valid_per_epochs: int,
           returns: bool = False) -> tuple:
-    print(f"Model {model.name}: Start training...")
+    print(f"Model {mdl.name}: Start training...")
 
     best_vld_acc = 0
-    # TOLERANCE = 3
-    # tol = 0
+    TOLERANCE = 3
+    count = 0
     model_queue = utils.ModelQ(1)  # Save the best model parameter
 
     for epoch in range(1, epochs + 1):
@@ -54,7 +54,7 @@ def train(model: Model.TFModel, train_loader: DataLoader, valid_loader: DataLoad
         for _, (seq, patt, lbl) in enumerate(train_loader):
             lbl = lbl.squeeze(1)  # The shape of NLLLoss label is (N), it's different from BCELoss
             lbl = lbl.type(torch.long)
-            batch_lss, _ = train_step(model=model, pattern=patt, sequence=seq, label=lbl)
+            batch_lss, _ = train_step(mdl=mdl, sequence=seq, pattern=patt, label=lbl)
             epoch_lss += batch_lss
 
         avg_epoch_lss = epoch_lss / step_trn
@@ -65,7 +65,7 @@ def train(model: Model.TFModel, train_loader: DataLoader, valid_loader: DataLoad
         if epoch % valid_per_epochs == 0:
             print(f"Validating at Epoch {epoch:02}")
             total_vld_lss = 0.0
-            total_vld_mtx = torch.zeros(14, 14, dtype=torch.int, device=torch.device("cuda:0") if
+            total_vld_mtx = torch.zeros(3, 3, dtype=torch.int, device=torch.device("cuda:0") if
                                         torch.cuda.is_available() else "cpu")
 
             step_vld = len(valid_loader)
@@ -73,7 +73,7 @@ def train(model: Model.TFModel, train_loader: DataLoader, valid_loader: DataLoad
             for _, (seq, patt, lbl) in enumerate(valid_loader):
                 lbl = lbl.squeeze(1)  # The shape of NLLLoss label is (N), it's different from BCELoss
                 lbl = lbl.type(torch.long)
-                batch_vld_lss, batch_vld_pred = valid_step(model=model, pattern=patt, sequence=seq, label=lbl)
+                batch_vld_lss, batch_vld_pred = valid_step(mdl=mdl, sequence=seq, pattern=patt, label=lbl)
 
                 total_vld_lss += batch_vld_lss
 
@@ -92,34 +92,30 @@ def train(model: Model.TFModel, train_loader: DataLoader, valid_loader: DataLoad
             # Select model based on valid accuracy
             if vld_acc > best_vld_acc:
                 best_vld_acc = vld_acc
-                best_model = copy.deepcopy(model)
+                best_model = copy.deepcopy(mdl)
                 model_queue.stack(best_model)
 
-            """
             # Early-stopping mechanism
-            if avg_vld_lss >= 1.5 * avg_epoch_lss:
-                if tol < TOLERANCE:
-                    tol += 1
-                elif tol >= TOLERANCE:
+            if avg_vld_lss >= 2 * avg_epoch_lss:
+                if count < TOLERANCE:
+                    count += 1
+                elif count >= TOLERANCE:
                     print("Stopped by early-stopping")
                     break
-            """
 
-    print(f"{model.name}: Training complete.")
+    print(f"{mdl.name}: Training complete.")
 
     if returns:
-        return model_queue, model
+        return model_queue, mdl
 
 
 @torch.no_grad()
-def predict(model: Model.TFModel, test_loader: DataLoader, returns: bool = False) -> tuple:
-    model.eval()
+def predict(mdl: dmodel.TFModel, test_loader: DataLoader, returns: bool = False) -> tuple:
+    mdl.eval()
 
     total_tst_lss = 0.0
-    total_tst_hit = 0
-    total_tst_sample = 0
-    total_tst_mtx = torch.zeros(14, 14, dtype=torch.int, device=torch.device("cuda:0" if torch.cuda.is_available()
-                                                                             else "cpu"))
+    total_tst_mtx = torch.zeros(3, 3, dtype=torch.int, device=torch.device("cuda:0" if torch.cuda.is_available()
+                                else "cpu"))
     total_top_k_prob = []
     total_top_k_idx = []
 
@@ -129,24 +125,8 @@ def predict(model: Model.TFModel, test_loader: DataLoader, returns: bool = False
         lbl = lbl.squeeze(1)
         lbl = lbl.type(torch.long)
 
-        batch_tst_lss, batch_tst_pred = valid_step(model=model, pattern=patt, sequence=seq, label=lbl)
+        batch_tst_lss, batch_tst_pred = valid_step(mdl=mdl, sequence=seq, pattern=patt, label=lbl)
         total_tst_lss += batch_tst_lss
-
-        # Top-k
-        batch_tst_pred_temp = torch.exp(batch_tst_pred)
-        top_k_prob, top_k_idx = torch.topk(batch_tst_pred_temp, 3)
-        top_k_prob = top_k_prob.tolist()
-        top_k_idx = top_k_idx.tolist()
-
-        for i in top_k_prob:
-            total_top_k_prob.append(i)
-        for i in top_k_idx:
-            total_top_k_idx.append(i)
-
-        # Top-k accuracy
-        batch_tst_hit, batch_tst_sample = metrics.top_k(predict=batch_tst_pred, label=lbl)
-        total_tst_hit += batch_tst_hit
-        total_tst_sample += batch_tst_sample
 
         # Confusion matrix
         batch_tst_mtx = metrics.confusion_mtx(predict=batch_tst_pred, label=lbl)
@@ -154,11 +134,9 @@ def predict(model: Model.TFModel, test_loader: DataLoader, returns: bool = False
 
     tst_acc, tst_pre, tst_rec, tst_f1, tst_mcc = metrics.metrics(total_tst_mtx)
     avg_tst_loss = total_tst_lss / step_tst
-    top_k_acc = total_tst_hit / total_tst_sample
 
     # Print evaluation result
-    print(f"Evaluate {model.name}")
-    print(f"| Top-k Accuracy: {top_k_acc:.4f} |")
+    print(f"Evaluate {mdl.name}")
     print(f"| Average Loss: {avg_tst_loss:.4f} | Accuracy: {tst_acc:.4f} | Precision: {tst_pre:.4f} | Recall: "
           f"{tst_rec:.4f} | F1-score: {tst_f1:.4f} | MCC: {tst_mcc:.4f} |")
 

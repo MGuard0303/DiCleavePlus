@@ -10,27 +10,6 @@ import math
 import torch
 
 
-# Return hit and total number for top-k calculation
-def top_k(predict: torch.Tensor, label: torch.Tensor, k: int = 3) -> tuple:
-    if len(predict) != len(label):
-        raise ValueError("The length of prediction tensor and label tensor does not match.")
-    else:
-        hit = 0
-        num = len(label)
-        predict = predict.detach()
-        label = label.detach()
-
-        predict = torch.exp(predict)
-
-        prob, idx = torch.topk(predict, k)
-
-        for i in range(len(label)):
-            if label[i] in idx[i]:
-                hit += 1
-
-        return hit, num
-
-
 # Return a confusion matrix whose row indicates true label and column indicates prediction
 def confusion_mtx(predict: torch.Tensor, label: torch.Tensor) -> torch.Tensor:
     if len(predict) != len(label):
@@ -38,7 +17,7 @@ def confusion_mtx(predict: torch.Tensor, label: torch.Tensor) -> torch.Tensor:
     else:
         predict = predict.detach()
         label = label.detach()
-        mtx = torch.zeros(14, 14, dtype=torch.int, device=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+        mtx = torch.zeros(3, 3, dtype=torch.int, device=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
         _, idx = torch.max(predict, dim=1, keepdim=True)
 
