@@ -5,30 +5,35 @@ from torch import nn
 
 
 class TFModel(nn.Module):
-    def __init__(self, hidden_feature: int, name: str = "TFModel"):
+    def __init__(self, embed_feature: int, hidden_feature: int, num_lstm_layer: int = 2, num_attn_head: int = 8,
+                 tf_dim_feedforward: int =256, num_tf_layer: int = 2, conv_kernel_size: int = 3, name: str = "TFModel"):
         super().__init__()
         self.name = name
 
-        self.lstm = nn.LSTM(input_size=hidden_feature, hidden_size=hidden_feature, num_layers=2, batch_first=True)
+        # Layers for LSTM structure
+        self.lstm = nn.LSTM(input_size=embed_feature, hidden_size=embed_feature, num_layers=num_lstm_layer,
+                            batch_first=True)
+        self.ln = nn.LayerNorm(normalized_shape=embed_feature)
 
-        self.encoder = nn.TransformerEncoderLayer(d_model=hidden_feature, nhead=8, dim_feedforward=256)
-        self.encoder_container = nn.TransformerEncoder(encoder_layer=self.encoder, num_layers=2,
+        # Layers for Transformer structure
+        self.encoder = nn.TransformerEncoderLayer(d_model=embed_feature, nhead=num_attn_head,
+                                                  dim_feedforward=tf_dim_feedforward, batch_first=True)
+        self.encoder_container = nn.TransformerEncoder(encoder_layer=self.encoder, num_layers=num_tf_layer,
                                                        enable_nested_tensor=False)
-        self.position_encoder = PositionEncoder(d_model=hidden_feature, length=200)
+        self.position_encoder = PositionEncoder(d_model=embed_feature, length=200, batch_first=True)
         self.conv = nn.Sequential(
-            nn.Conv1d(in_channels=hidden_feature, out_channels=hidden_feature, kernel_size=3, padding=1),
-            nn.BatchNorm1d(num_features=hidden_feature, eps=1e-08),
+            nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=conv_kernel_size, padding=1),
+            nn.BatchNorm1d(num_features=embed_feature),
             nn.LeakyReLU()
         )
 
-        # Process after convolutional structure
         self.identity = nn.Sequential()  # Resnet short-cut for convolution structure
-        self.bn = nn.BatchNorm1d(num_features=hidden_feature, eps=1e-08)
-        self.seq_linear = nn.Linear(in_features=200, out_features=14)
+        self.pattern_linear = nn.Linear(in_features=14 * embed_feature, out_features=hidden_feature)
+        self.sequence_linear = nn.Linear(in_features=200 * embed_feature, out_features=hidden_feature)
 
         self.flatten = nn.Flatten()
         self.fc = nn.Sequential(
-            nn.Linear(in_features=14*hidden_feature, out_features=512),
+            nn.Linear(in_features=2*hidden_feature, out_features=512),
             nn.LeakyReLU(),
             nn.Dropout(),
             nn.Linear(in_features=512, out_features=128),
@@ -43,29 +48,30 @@ class TFModel(nn.Module):
             nn.LogSoftmax(dim=1)
         )
 
-    # Shape of pattern inputs is (Batch, Length, Dimension)
+    # Shape of inputs is (Batch, Length, Dimension)
     def forward(self, sequence: torch.Tensor, pattern: torch.Tensor) -> torch.Tensor:
         self.lstm.flatten_parameters()
         pattern_identity = self.identity(pattern)
-        pattern, _ = self.lstm(pattern)  # (B, L, D)
-        pattern = torch.permute(input=pattern, dims=(0, 2, 1))
-        pattern = self.bn(pattern)  # (B, D, L)
-        pattern = torch.permute(input=pattern, dims=(0, 2, 1))  # Final shape (B, L, D)
+        pattern_identity = self.ln(pattern_identity)
+
+        pattern, _ = self.lstm(pattern)  # Output size: (B, L, D)
+        pattern = self.ln(pattern)  # Output size: (B, L, D)
         pattern += pattern_identity
+        pattern = self.flatten(pattern)
+        pattern = self.pattern_linear(pattern)
 
         sequence_identity = self.identity(sequence)
-        sequence = torch.permute(input=sequence, dims=(1, 0, 2))
-        sequence = self.position_encoder(sequence)  # (L, B, D)
-        sequence = self.encoder_container(sequence)  # (L, B, D)
-        sequence = torch.permute(input=sequence, dims=(1, 2, 0))
-        sequence = self.conv(sequence)  # (B, D, L)
-        sequence = torch.permute(input=sequence, dims=(0, 2, 1))
-        sequence += sequence_identity  # (B, L, D)
-        sequence = torch.permute(input=sequence, dims=(0, 2, 1))
-        sequence = self.seq_linear(sequence)  # (B, D, L)
-        sequence = torch.permute(input=sequence, dims=(0, 2, 1))  # Final shape (B, L, D)
 
-        embed = pattern + sequence
+        sequence = self.position_encoder(sequence)  # Output size: (B, L, D)
+        sequence = self.encoder_container(sequence)  # Output size: (B, L, D)
+        sequence = torch.permute(input=sequence, dims=(0, 2, 1))
+        sequence = self.conv(sequence)  # Output size: (B, D, L)
+        sequence = torch.permute(input=sequence, dims=(0, 2, 1))
+        sequence += sequence_identity  # Output size: (B, L, D)
+        sequence = self.flatten(sequence)
+        sequence = self.sequence_linear(sequence)
+
+        embed = torch.cat((pattern, sequence), 1)
         embed = self.flatten(embed)
         embed = self.fc(embed)
         embed = self.output_layer(embed)
@@ -73,10 +79,13 @@ class TFModel(nn.Module):
         return embed
 
 
-# The input of PositionEncoder is (Length, Batch, Dimension)
+# The default input shape is (Length, Batch, Dimension)
+# If batch_first=True, the default input shape is (Batch, Length, Dimension)
+# Output shape is identity with input shape
 class PositionEncoder(nn.Module):
-    def __init__(self, d_model: int, length: int, n: float = 10000.0):
+    def __init__(self, d_model: int, length: int, n: float = 10000.0, batch_first: bool = False):
         super().__init__()
+        self.batch_first = batch_first
         position = torch.arange(length).unsqueeze(1)
         denominator = torch.exp(torch.arange(0, d_model, 2) * (-math.log(n) / d_model))
         pe = torch.zeros(length, 1, d_model)
@@ -90,7 +99,12 @@ class PositionEncoder(nn.Module):
         self.register_buffer("pe", pe)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = x + self.pe[:x.size(0)]
+        if self.batch_first:
+            x = torch.permute(input=x, dims=(1, 0, 2))
+            x = x + self.pe[:x.size(0)]
+            x = torch.permute(input=x, dims=(1, 0, 2))
+        else:
+            x = x + self.pe[:x.size(0)]
 
         return x
 

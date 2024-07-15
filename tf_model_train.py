@@ -15,7 +15,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Training codes for SPOT-RNA secondary structure
 # Load dataset and separate data for k-fold
-path = "./dataset/rnafold/dataset/dataset.csv"
+path = "./dataset/rnafold/balanced_dataset/balanced_dataset.csv"
 df = pd.read_csv(path)
 fold_size, _ = divmod(len(df), 5)
 
@@ -27,7 +27,7 @@ with open("./dataset/rnafold/sec_vocab.pickle", "rb") as f:
     sec_vocabs = pickle.load(f)
 
 # Load pre-precessed data
-with open("dataset/rnafold/dataset/pre_processed.pickle", "rb") as f:
+with open("dataset/rnafold/balanced_dataset/pre_processed.pickle", "rb") as f:
     pp = pickle.load(f)
 
 sequence_embedding = dmodel.EmbeddingLayer(hidden_feature=32, softmax_dim=1, is_sec=False).to(device)
@@ -96,7 +96,7 @@ for fold in range(5):
     dl_tst = DataLoader(ds_tst, batch_size=128, shuffle=False)
 
     # Initial model
-    model = dmodel.TFModel(hidden_feature=32)
+    model = dmodel.TFModel(embed_feature=32, hidden_feature=64)
     model.loss_function = torch.nn.NLLLoss()
     model.optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     model.to(device)
