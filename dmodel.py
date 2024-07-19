@@ -144,13 +144,20 @@ class UnionWeightFusionLayer(nn.Module):
         elif pooling_type == 2:
             self.pooling = nn.AvgPool2d(kernel_size=kernel_size)
 
-        self.softmax = nn.Softmax(dim=0)
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, t1: torch.Tensor, t2: torch.Tensor):
+        # Similar to AFF, change the size of input sensor as (Batch, Channel, Dimension(s))
+        t1 = torch.unsqueeze(t1, 1)
+        t2 = torch.unsqueeze(t2, 1)
+
         union = t1 + t2
         union = self.pooling(union)
-        w = self.softmax(union)
+        w = self.sigmoid(union)
         fused = w * t1 + (1 - w) * t2
+
+        w = torch.squeeze(w)
+        fused = torch.squeeze(fused)
 
         return fused, w
 
