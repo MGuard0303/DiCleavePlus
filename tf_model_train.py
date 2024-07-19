@@ -30,9 +30,13 @@ with open("./dataset/rnafold/sec_vocab.pickle", "rb") as f:
 with open("dataset/rnafold/balanced_dataset/pre_processed.pickle", "rb") as f:
     pp = pickle.load(f)
 
-sequence_embedding = dmodel.EmbeddingLayer(hidden_feature=32, softmax_dim=1, is_sec=False).to(device)
-secondary_embedding = dmodel.EmbeddingLayer(hidden_feature=32, softmax_dim=1, is_sec=True).to(device)
-fusion_layer = dmodel.FusionLayer(hidden_feature=32, softmax_dim=1).to(device)
+HID_FEA = 32
+
+sequence_embedding = dmodel.EmbeddingLayer(hidden_feature=HID_FEA, softmax_dim=1, is_sec=False).to(device)
+secondary_embedding = dmodel.EmbeddingLayer(hidden_feature=HID_FEA, softmax_dim=1, is_sec=True).to(device)
+self_weight_fusion = dmodel.SelfWeightFusionLayer(hidden_feature=HID_FEA, softmax_dim=1).to(device)
+union_fusion_sequence = dmodel.UnionWeightFusionLayer(kernel_size=(200, HID_FEA), pooling_type=2)
+union_fusion_pattern = dmodel.UnionWeightFusionLayer(kernel_size=(14, HID_FEA), pooling_type=2)
 
 for fold in range(5):
     # Get training data and test data
@@ -66,10 +70,10 @@ for fold in range(5):
     patt_db_trn = secondary_embedding(patt_db_trn_1, patt_db_trn_2, patt_db_trn_3)
     patt_db_tst = secondary_embedding(patt_db_tst_1, patt_db_tst_2, patt_db_tst_3)
 
-    sequence_trn, _ = fusion_layer(seq_trn, db_trn)
-    sequence_tst, _ = fusion_layer(seq_tst, db_tst)
-    pattern_trn, _ = fusion_layer(patt_trn, patt_db_trn)
-    pattern_tst, _ = fusion_layer(patt_tst, patt_db_tst)
+    sequence_trn, _ = union_fusion_sequence(seq_trn, db_trn)
+    sequence_tst, _ = union_fusion_sequence(seq_tst, db_tst)
+    pattern_trn, _ = union_fusion_pattern(patt_trn, patt_db_trn)
+    pattern_tst, _ = union_fusion_pattern(patt_tst, patt_db_tst)
 
     # Get validation data from training data
     vld_size = math.floor(len(seq_trn_1) * 0.1)

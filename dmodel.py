@@ -6,7 +6,8 @@ from torch import nn
 
 class TFModel(nn.Module):
     def __init__(self, embed_feature: int, hidden_feature: int, num_lstm_layer: int = 2, num_attn_head: int = 8,
-                 tf_dim_feedforward: int =256, num_tf_layer: int = 2, conv_kernel_size: int = 3, name: str = "TFModel"):
+                 tf_dim_feedforward: int = 256, num_tf_layer: int = 2, conv_kernel_size: int = 3, name: str = "TFModel"
+                 ):
         super().__init__()
         self.name = name
 
@@ -31,9 +32,11 @@ class TFModel(nn.Module):
         self.pattern_linear = nn.Linear(in_features=14 * embed_feature, out_features=hidden_feature)
         self.sequence_linear = nn.Linear(in_features=200 * embed_feature, out_features=hidden_feature)
 
+        self.union_fusion = UnionWeightFusionLayer(kernel_size=hidden_feature)
+
         self.flatten = nn.Flatten()
         self.fc = nn.Sequential(
-            nn.Linear(in_features=2*hidden_feature, out_features=512),
+            nn.Linear(in_features=hidden_feature, out_features=512),
             nn.LeakyReLU(),
             nn.Dropout(),
             nn.Linear(in_features=512, out_features=128),
@@ -71,7 +74,7 @@ class TFModel(nn.Module):
         sequence = self.flatten(sequence)
         sequence = self.sequence_linear(sequence)
 
-        embed = torch.cat((pattern, sequence), 1)
+        embed, _ = self.union_fusion(pattern, sequence)
         embed = self.flatten(embed)
         embed = self.fc(embed)
         embed = self.output_layer(embed)
@@ -112,7 +115,7 @@ class PositionEncoder(nn.Module):
 # Fuse different kmers embeddings using attention
 # softmax_dim should be the length dimension of input embedding
 # Assume the input size is (Batch, Length, Dimension)
-class FusionLayer(nn.Module):
+class SelfWeightFusionLayer(nn.Module):
     def __init__(self, hidden_feature: int, softmax_dim: int):
         super().__init__()
         self.softmax = nn.Softmax(dim=softmax_dim)
@@ -130,6 +133,28 @@ class FusionLayer(nn.Module):
         return fused, ws
 
 
+# Add two input tensors to obtain the union tensor.
+# Use global average pooling for union tensor process.
+# Inspired by Attentional Feature Fusion
+class UnionWeightFusionLayer(nn.Module):
+    def __init__(self, kernel_size: int | tuple, pooling_type: int = 1):
+        super().__init__()
+        if pooling_type == 1:
+            self.pooling = nn.AvgPool1d(kernel_size=kernel_size)
+        elif pooling_type == 2:
+            self.pooling = nn.AvgPool2d(kernel_size=kernel_size)
+
+        self.softmax = nn.Softmax(dim=0)
+
+    def forward(self, t1: torch.Tensor, t2: torch.Tensor):
+        union = t1 + t2
+        union = self.pooling(union)
+        w = self.softmax(union)
+        fused = w * t1 + (1 - w) * t2
+
+        return fused, w
+
+
 # Embed and fuse sequence and secondary kmer raw tensors into sequence input and pattern input
 class EmbeddingLayer(nn.Module):
     def __init__(self, hidden_feature: int, softmax_dim: int, is_sec: bool = False):
@@ -144,7 +169,7 @@ class EmbeddingLayer(nn.Module):
             self.e2 = nn.Embedding(num_embeddings=21, embedding_dim=hidden_feature, padding_idx=0)
             self.e3 = nn.Embedding(num_embeddings=85, embedding_dim=hidden_feature, padding_idx=0)
 
-        self.fusion = FusionLayer(hidden_feature=hidden_feature, softmax_dim=softmax_dim)
+        self.fusion = SelfWeightFusionLayer(hidden_feature=hidden_feature, softmax_dim=softmax_dim)
 
     def forward(self, t1: torch.Tensor, t2: torch.Tensor, t3: torch.Tensor) -> torch.Tensor:
         em1 = self.e1(t1)
