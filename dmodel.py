@@ -32,7 +32,7 @@ class TFModel(nn.Module):
         self.pattern_linear = nn.Linear(in_features=14 * embed_feature, out_features=hidden_feature)
         self.sequence_linear = nn.Linear(in_features=200 * embed_feature, out_features=hidden_feature)
 
-        self.union_fusion = UnionWeightFusionLayer(kernel_size=hidden_feature)
+        self.union_fusion = AttentionalFeatureFusion(global_pool_kernel=hidden_feature, pool_type=1)
 
         self.flatten = nn.Flatten()
         self.fc = nn.Sequential(
@@ -133,16 +133,16 @@ class SelfWeightFusionLayer(nn.Module):
         return fused, ws
 
 
-# Add two input tensors to obtain the union tensor.
-# Use global average pooling for union tensor process.
-# Inspired by Attentional Feature Fusion
-class UnionWeightFusionLayer(nn.Module):
-    def __init__(self, kernel_size: int | tuple, pooling_type: int = 1):
+# Use Attentional Feature Fusion module to fuse two feature
+class AttentionalFeatureFusion(nn.Module):
+    def __init__(self, global_pool_kernel: int | tuple, pool_type: int):
         super().__init__()
-        if pooling_type == 1:
-            self.pooling = nn.AvgPool1d(kernel_size=kernel_size)
-        elif pooling_type == 2:
-            self.pooling = nn.AvgPool2d(kernel_size=kernel_size)
+        # Global feature
+        # TODO
+        if pool_type == 1:
+            self.global_avg_pool = nn.AvgPool1d(kernel_size=global_pool_kernel)
+        elif pool_type == 2:
+            self.global_avg_pool = nn.AvgPool2d(kernel_size=global_pool_kernel)
 
         self.sigmoid = nn.Sigmoid()
 
@@ -152,7 +152,7 @@ class UnionWeightFusionLayer(nn.Module):
         t2 = torch.unsqueeze(t2, 1)
 
         union = t1 + t2
-        union = self.pooling(union)
+        union = self.global_avg_pool(union)
         w = self.sigmoid(union)
         fused = w * t1 + (1 - w) * t2
 

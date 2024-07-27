@@ -35,8 +35,8 @@ HID_FEA = 32
 sequence_embedding = dmodel.EmbeddingLayer(hidden_feature=HID_FEA, softmax_dim=1, is_sec=False).to(device)
 secondary_embedding = dmodel.EmbeddingLayer(hidden_feature=HID_FEA, softmax_dim=1, is_sec=True).to(device)
 self_weight_fusion = dmodel.SelfWeightFusionLayer(hidden_feature=HID_FEA, softmax_dim=1).to(device)
-union_fusion_sequence = dmodel.UnionWeightFusionLayer(kernel_size=(200, HID_FEA), pooling_type=2)
-union_fusion_pattern = dmodel.UnionWeightFusionLayer(kernel_size=(14, HID_FEA), pooling_type=2)
+union_fusion_sequence = dmodel.AttentionalFeatureFusion(global_pool_kernel=(200, HID_FEA), pool_type=2)
+union_fusion_pattern = dmodel.AttentionalFeatureFusion(global_pool_kernel=(14, HID_FEA), pool_type=2)
 
 for fold in range(5):
     # Get training data and test data
