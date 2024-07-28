@@ -137,7 +137,6 @@ class SelfWeightFusionLayer(nn.Module):
 class AttentionalFeatureFusion(nn.Module):
     def __init__(self, glo_pool_size: int | tuple, pool_type: int):
         super().__init__()
-        # TODO
         if pool_type == 1:
             self.global_avg_pool = nn.AvgPool1d(kernel_size=glo_pool_size)
             self.pw_pool = nn.Conv1d(in_channels=1, out_channels=1, kernel_size=1)
