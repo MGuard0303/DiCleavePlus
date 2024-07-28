@@ -32,7 +32,7 @@ class TFModel(nn.Module):
         self.pattern_linear = nn.Linear(in_features=14 * embed_feature, out_features=hidden_feature)
         self.sequence_linear = nn.Linear(in_features=200 * embed_feature, out_features=hidden_feature)
 
-        self.union_fusion = AttentionalFeatureFusion(global_pool_kernel=hidden_feature, pool_type=1)
+        self.union_fusion = AttentionalFeatureFusion(glo_pool_size=hidden_feature, pool_type=1)
 
         self.flatten = nn.Flatten()
         self.fc = nn.Sequential(
@@ -135,14 +135,19 @@ class SelfWeightFusionLayer(nn.Module):
 
 # Use Attentional Feature Fusion module to fuse two feature
 class AttentionalFeatureFusion(nn.Module):
-    def __init__(self, global_pool_kernel: int | tuple, pool_type: int):
+    def __init__(self, glo_pool_size: int | tuple, pool_type: int):
         super().__init__()
-        # Global feature
         # TODO
         if pool_type == 1:
-            self.global_avg_pool = nn.AvgPool1d(kernel_size=global_pool_kernel)
+            self.global_avg_pool = nn.AvgPool1d(kernel_size=glo_pool_size)
+            self.pw_pool = nn.Conv1d(in_channels=1, out_channels=1, kernel_size=1)
+            self.bn = nn.BatchNorm1d(num_features=1)
         elif pool_type == 2:
-            self.global_avg_pool = nn.AvgPool2d(kernel_size=global_pool_kernel)
+            self.global_avg_pool = nn.AvgPool2d(kernel_size=glo_pool_size)
+            self.pw_pool = nn.Conv2d(in_channels=1, out_channels=1, kernel_size=(1, 1))
+            self.bn = nn.BatchNorm2d(num_features=1)
+
+        self.relu = nn.ReLU()
 
         self.sigmoid = nn.Sigmoid()
 
@@ -150,10 +155,20 @@ class AttentionalFeatureFusion(nn.Module):
         # Similar to AFF, change the size of input sensor as (Batch, Channel, Dimension(s))
         t1 = torch.unsqueeze(t1, 1)
         t2 = torch.unsqueeze(t2, 1)
+        temp = t1 + t2
 
-        union = t1 + t2
-        union = self.global_avg_pool(union)
-        w = self.sigmoid(union)
+        # Global features
+        u_g = self.global_avg_pool(temp)
+        u_g = self.relu(u_g)
+        u_g = self.bn(u_g)
+
+        # Local features
+        u_l = self.pw_pool(temp)
+        u_l = self.relu(u_l)
+        u_l = self.bn(u_l)
+
+        u = u_g + u_l
+        w = self.sigmoid(u)
         fused = w * t1 + (1 - w) * t2
 
         w = torch.squeeze(w)
