@@ -32,7 +32,7 @@ class TFModel(nn.Module):
         self.pattern_linear = nn.Linear(in_features=14 * embed_feature, out_features=hidden_feature)
         self.sequence_linear = nn.Linear(in_features=200 * embed_feature, out_features=hidden_feature)
 
-        self.union_fusion = AttentionalFeatureFusion(glo_pool_size=hidden_feature, pool_type=1)
+        self.union_fusion = AttentionalFeatureFusionLayer(glo_pool_size=hidden_feature, pool_type=1)
 
         self.flatten = nn.Flatten()
         self.fc = nn.Sequential(
@@ -133,8 +133,30 @@ class SelfWeightFusionLayer(nn.Module):
         return fused, ws
 
 
-# Use Attentional Feature Fusion module to fuse two feature
-class AttentionalFeatureFusion(nn.Module):
+# Used gates similar in LSTM to control the contribution of each feature
+class GatedFusionLayer(nn.Module):
+    def __init__(self, input_feature: int, fused_feature: int):
+        super().__init__()
+        self.gate = nn.Linear(input_feature, fused_feature)
+        self.sigmoid = nn.Sigmoid()
+        self.fusion = nn.Linear(fused_feature, fused_feature)
+
+    def forward(self, *args: torch.Tensor) -> tuple:
+        fused = torch.zeros_like(args[0])
+        gs = []
+
+        for t in args:
+            g = self.sigmoid(self.gate(t))
+            fused += g * t
+            gs.append(g)
+
+        fused = self.fusion(fused)
+
+        return fused, gs
+
+
+# Use Attentional Feature Fusion (AFF) module to fuse two feature
+class AttentionalFeatureFusionLayer(nn.Module):
     def __init__(self, glo_pool_size: int | tuple, pool_type: int):
         super().__init__()
         if pool_type == 1:
