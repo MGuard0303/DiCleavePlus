@@ -10,6 +10,7 @@ import math
 import torch
 
 
+"""
 # Return a confusion matrix whose row indicates true label and column indicates prediction
 def confusion_mtx(predict: torch.Tensor, label: torch.Tensor) -> torch.Tensor:
     if len(predict) != len(label):
@@ -27,7 +28,6 @@ def confusion_mtx(predict: torch.Tensor, label: torch.Tensor) -> torch.Tensor:
         return mtx
 
 
-"""
 # Calculate accuracy, precision, recall, f1 and mcc from confusion matrix
 # Use macro-average approach
 def metrics(matrix: torch.Tensor) -> list:
