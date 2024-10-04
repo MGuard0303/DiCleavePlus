@@ -27,6 +27,7 @@ def confusion_mtx(predict: torch.Tensor, label: torch.Tensor) -> torch.Tensor:
         return mtx
 
 
+"""
 # Calculate accuracy, precision, recall, f1 and mcc from confusion matrix
 # Use macro-average approach
 def metrics(matrix: torch.Tensor) -> list:
@@ -81,3 +82,4 @@ def metrics(matrix: torch.Tensor) -> list:
         mcc = numerator / (denominator + epsilon)
 
         return [acc, avg_pre, avg_rec, avg_f, mcc]
+"""

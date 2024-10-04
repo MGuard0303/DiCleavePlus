@@ -133,6 +133,7 @@ class SelfWeightFusionLayer(nn.Module):
         return fused, ws
 
 
+"""
 # Used gates similar in LSTM to control the contribution of each feature
 class GatedFusionLayer(nn.Module):
     def __init__(self, input_feature: int, fused_feature: int):
@@ -153,9 +154,10 @@ class GatedFusionLayer(nn.Module):
         fused = self.fusion(fused)
 
         return fused, gs
+"""
 
 
-# Use Attentional Feature Fusion (AFF) module to fuse two feature
+# Use Attentional Feature Fusion (AFF) module to fuse two feature.
 class AttentionalFeatureFusionLayer(nn.Module):
     def __init__(self, glo_pool_size: int | tuple, pool_type: int):
         super().__init__()
@@ -173,7 +175,7 @@ class AttentionalFeatureFusionLayer(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, t1: torch.Tensor, t2: torch.Tensor):
-        # Similar to AFF, change the size of input sensor as (Batch, Channel, Dimension(s))
+        # Similar to AFF, change the size of input sensor as (Batch, Channel, Dimension(s)).
         t1 = torch.unsqueeze(t1, 1)
         t2 = torch.unsqueeze(t2, 1)
         temp = t1 + t2
@@ -198,7 +200,7 @@ class AttentionalFeatureFusionLayer(nn.Module):
         return fused, w
 
 
-# Embed and fuse sequence and secondary kmer raw tensors into sequence input and pattern input
+# Embed and fuse sequence and secondary kmer raw tensors into sequence input and pattern input.
 class EmbeddingLayer(nn.Module):
     def __init__(self, hidden_feature: int, softmax_dim: int, is_sec: bool = False):
         super().__init__()
@@ -224,6 +226,7 @@ class EmbeddingLayer(nn.Module):
         return fused
 
 
+"""
 class RNNModel(nn.Module):
     def __init__(self, input_dimension: int, hidden_feature: int, name: str = "RNNModel"):
         super().__init__()
@@ -270,3 +273,4 @@ class RNNModel(nn.Module):
         embed = self.output_layer(embed)
 
         return embed
+"""

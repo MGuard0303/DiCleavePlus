@@ -30,13 +30,12 @@ with open("./dataset/rnafold/sec_vocab.pickle", "rb") as f:
 with open("dataset/rnafold/dataset_b/pre_processed.pickle", "rb") as f:
     pp = pickle.load(f)
 
-HID_FEA = 32
+HIDDEN_FEATURE = 32
 
-sequence_embedding = dmodel.EmbeddingLayer(hidden_feature=HID_FEA, softmax_dim=1, is_sec=False).to(device)
-secondary_embedding = dmodel.EmbeddingLayer(hidden_feature=HID_FEA, softmax_dim=1, is_sec=True).to(device)
-self_weight_fusion = dmodel.SelfWeightFusionLayer(hidden_feature=HID_FEA, softmax_dim=1).to(device)
-union_fusion_sequence = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, HID_FEA), pool_type=2)
-union_fusion_pattern = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, HID_FEA), pool_type=2)
+sequence_embedding = dmodel.EmbeddingLayer(hidden_feature=HIDDEN_FEATURE, softmax_dim=1, is_sec=False).to(device)
+secondary_embedding = dmodel.EmbeddingLayer(hidden_feature=HIDDEN_FEATURE, softmax_dim=1, is_sec=True).to(device)
+union_fusion_sequence = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, HIDDEN_FEATURE), pool_type=2)
+union_fusion_pattern = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, HIDDEN_FEATURE), pool_type=2)
 
 for fold in range(5):
     # Get training data and test data
@@ -112,4 +111,4 @@ for fold in range(5):
 
     best_mdl = model_q.queue.popleft()
     best_mdl.eval()
-    logics.predict(mdl=best_mdl, test_loader=dl_tst)
+    logics.evaluate(mdl=best_mdl, test_loader=dl_tst)
