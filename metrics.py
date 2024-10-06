@@ -1,10 +1,3 @@
-"""
-The sklearn package uses the Keras style, which the True value in the first place and the Predicted value in the
-second place. However, These "get" methods use the PyTorch style, where the Predicted value is in the
-first place, followed by the True value.
-"""
-
-
 import math
 
 import torch
@@ -83,3 +76,115 @@ def metrics(matrix: torch.Tensor) -> list:
 
         return [acc, avg_pre, avg_rec, avg_f, mcc]
 """
+
+
+# Perfect Match Fraction (PMF)
+# Return a tuple of (Number of corrected labeled sample, Total sample).
+def pmf(pred: torch.Tensor, label: torch.Tensor) -> float:
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    if len(pred) != len(label):
+        raise ValueError("The length of prediction tensor and label tensor does not match.")
+    else:
+        pred = pred.detach()
+        pred = torch.exp(pred)
+        _, label_pred = torch.max(pred, dim=0)
+
+        label = label.detach()
+
+        corrected = 0
+        num = len(pred)
+
+        for i in range(num):
+            if label_pred[i].item() == label[i].item():
+                corrected += 1
+
+        return corrected / num
+
+
+# Positional Shift Error (PSE)
+# Return a tuple of (Sum delta, Total sample).
+def pse(pred: torch.Tensor, label: torch.Tensor) -> float:
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    if len(pred) != len(label):
+        raise ValueError("The length of prediction tensor and label tensor does not match.")
+    else:
+        pred = pred.detach()
+        pred = torch.exp(pred)
+        label = label.detach()
+        sum_delta = 0
+        num = len(pred)
+
+        _, label_pred = torch.max(pred, dim=0)
+
+        for i in range(num):
+            if label_pred[i].item() != label[i].item() and label_pred[i].item() * label[i].item() == 0:
+                delta = 13
+                sum_delta += delta
+            else:
+                delta = abs(label_pred[i].item() - label[i].item())
+                sum_delta += delta
+
+        return sum_delta / num
+
+
+# Metrics for positive-negative binary assessment.
+# Currently return accuracy, specificity, sensitivity, mcc.
+def binary_metric(pred: torch.Tensor, label: torch.Tensor) -> tuple:
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    if len(pred) != len(label):
+        raise ValueError("The length of prediction tensor and label tensor does not match.")
+    else:
+        pred = pred.detach()
+        pred = torch.exp(pred)
+        label = label.detach()
+
+        tp, tn, fp, fn = 0, 0, 0, 0
+        num = len(pred)
+
+        _, label_pred = torch.max(pred, dim=0)
+
+        for i in range(num):
+            if label_pred[i].item != 0:
+                label_pred[i] = 1
+
+            if label_pred[i].item() == 1 and label[i].item() == 1:
+                tp += 1
+            elif label_pred[i].item() == 0 and label[i].item() == 0:
+                tn += 1
+            elif label_pred[i].item() == 1 and label[i].item() == 0:
+                fp += 1
+            elif label_pred[i].item() == 0 and label[i].item() == 1:
+                fn += 1
+
+        acc = (tp + tn) / (tp + tn + fp + fn)
+        spe = tn / (tn + fp)
+        sen = tp / (tp + fn)
+        mcc = ((tp * tn) - (fp * fn)) / math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
+
+        return acc, spe, sen, mcc
+
+
+# Calculate top-k accuracy.
+def topk_acc(pred: torch.Tensor, label: torch.Tensor, k: int = 3) -> float:
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    if len(pred) != len(label):
+        raise ValueError("The length of prediction tensor and label tensor does not match.")
+    else:
+        pred = pred.detach()
+        pred = torch.exp(pred)
+        label = label.detach()
+
+        num = len(pred)
+        hit = 0
+
+        _, top_k_pred = torch.topk(pred, k=k, dim=1)
+
+        for i in range(num):
+            if label[i] in top_k_pred[i]:
+                hit += 1
+
+        return hit / num

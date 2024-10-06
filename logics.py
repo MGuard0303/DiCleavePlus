@@ -9,152 +9,141 @@ import dmodel
 import utils
 
 
-def train_process(mdl: dmodel.TFModel, sequence: torch.Tensor, pattern: torch.Tensor, label: torch.Tensor) -> tuple:
-    # Set to the training mode, dropout and batch normalization will work under this mode
-    mdl.train()
-    mdl.optimizer.zero_grad()  # Clear the gradient everytime
+def train_process(model: dmodel.TFModel, sequence: torch.Tensor, pattern: torch.Tensor, label: torch.Tensor) -> tuple:
+    # Set to the training mode, dropout and batch normalization will work under this mode.
+    model.train()
+    model.optimizer.zero_grad()  # Clear the gradient everytime
 
     # Forward propagation
-    pred = mdl(sequence=sequence, pattern=pattern)
-    lss = mdl.loss_function(pred, label)
+    pred = model(sequence=sequence, pattern=pattern)
+    loss = model.loss_function(pred, label)
 
     # Backward propagation
-    lss.backward(retain_graph=True)
-    mdl.optimizer.step()  # Update the parameters of the model
+    loss.backward(retain_graph=True)
+    model.optimizer.step()  # Update the parameters of the model
 
-    return lss.item(), pred  # loss is a one-element tensor, so it can use .item() method
+    return loss.item(), pred  # loss is a one-element tensor, so it can use .item() method
 
 
 @torch.no_grad()  # This decorator makes following function not calculate gradient
-def valid_process(mdl: dmodel.TFModel, sequence: torch.Tensor, pattern: torch.Tensor, label: torch.Tensor) -> tuple:
+def valid_process(model: dmodel.TFModel, sequence: torch.Tensor, pattern: torch.Tensor, label: torch.Tensor) -> tuple:
     # Set to the evaluation mode, dropout and batch normalization will not work
-    mdl.eval()
+    model.eval()
 
-    pred = mdl(sequence=sequence, pattern=pattern)
-    lss = mdl.loss_function(pred, label)
+    pred = model(sequence=sequence, pattern=pattern)
+    loss = model.loss_function(pred, label)
 
-    return lss.item(), pred
+    return loss.item(), pred
 
 
-def train(mdl: dmodel.TFModel, train_loader: DataLoader, valid_loader: DataLoader, epochs: int, valid_per_epochs: int,
+def train(model: dmodel.TFModel, train_loader: DataLoader, valid_loader: DataLoader, epochs: int, valid_per_epochs: int,
           returns: bool = False) -> tuple:
-    print(f"Model {mdl.name}: Start training...")
+    print(f"Model {model.name}: Start training...")
 
-    best_vld_acc = 0
     TOLERANCE = 3
     count = 0
-    # TODO: Review
-    model_queue = utils.ModelQ(1)  # Save the best model parameter
+    m_queue = utils.ModelQ(3)  # Save top-3 model parameters
+    best_vld_loss = float("inf")
 
     for epoch in range(1, epochs + 1):
-        epoch_lss = 0.0
+        epoch_loss = 0.0
 
         # Training step
         trn_steps = len(train_loader)
 
         for _, (seq, patt, lbl) in enumerate(train_loader):
-            lbl = lbl.squeeze(1)  # The shape of NLLLoss label is (N), it's different from BCELoss
+            lbl = lbl.squeeze(1)  # The shape of NLLLoss label is (N)
             lbl = lbl.type(torch.long)
-            batch_lss, _ = train_process(mdl=mdl, sequence=seq, pattern=patt, label=lbl)
-            epoch_lss += batch_lss
+            batch_loss, _ = train_process(model=model, sequence=seq, pattern=patt, label=lbl)
+            epoch_loss += batch_loss
 
-        avg_epoch_lss = epoch_lss / trn_steps
+        avg_epoch_loss = epoch_loss / trn_steps
         print(f"Epoch {epoch:02}")
-        print(f"| Average Training Loss: {avg_epoch_lss:.4f} |")
+        print(f"| Average Training Loss: {avg_epoch_loss:.3f} |")
 
-        # Validate model at certain epoch
+        # Validate model at specified epoch.
         if epoch % valid_per_epochs == 0:
             print(f"Validating at Epoch {epoch:02}")
-            total_vld_lss = 0.0
-            """
-            total_vld_mtx = torch.zeros(3, 3, dtype=torch.int, device=torch.device("cuda:0") if
-                                        torch.cuda.is_available() else "cpu")
-            """
+            vld_loss = 0.0
 
             vld_steps = len(valid_loader)
 
             for _, (seq, patt, lbl) in enumerate(valid_loader):
-                lbl = lbl.squeeze(1)  # The shape of NLLLoss label is (N), it's different from BCELoss
+                lbl = lbl.squeeze(1)  # The shape of NLLLoss label is (N)
                 lbl = lbl.type(torch.long)
-                batch_vld_lss, batch_vld_pred = valid_process(mdl=mdl, sequence=seq, pattern=patt, label=lbl)
+                batch_vld_loss, _ = valid_process(model=model, sequence=seq, pattern=patt, label=lbl)
 
-                total_vld_lss += batch_vld_lss
+                vld_loss += batch_vld_loss
 
-                # Get the confusion matrix on each batch and add the matrix to the total matrix
-                # batch_vld_mtx = metrics.confusion_mtx(predict=batch_vld_pred, label=lbl)
-                # total_vld_mtx += batch_vld_mtx
+            avg_vld_loss = vld_loss / vld_steps
 
-            # Get accuracy, precision, recall and f1 and mcc from confusion matrix
-            # vld_acc, vld_pre, vld_rec, vld_f1, vld_mcc = metrics.metrics(total_vld_mtx)
-            avg_vld_lss = total_vld_lss / vld_steps
+            print(f"| Average Validation Loss: {avg_vld_loss:.3f} |")
 
-            """
-            print(f"| Average Valid Loss: {avg_vld_lss:.4f} | Valid Accuracy: {vld_acc:.4f} | Valid Precision: "
-                  f"{vld_pre:.4f} | Valid Recall: {vld_rec:.4f} | Valid F1-score: {vld_f1:.4f} | Valid MCC: "
-                  f"{vld_mcc:.4f} |")
-            """
-
-            # TODO: New output of validation.
-
-            # TODO: New assessment to select best model.
-            """
-            if vld_acc > best_vld_acc:
-                best_vld_acc = vld_acc
-                best_model = copy.deepcopy(mdl)
-                model_queue.stack(best_model)
-            """
+            # Use validation loss to select best model.
+            if avg_vld_loss < best_vld_loss:
+                best_vld_loss = avg_vld_loss
+                best_model = copy.deepcopy(model)
+                m_queue.stack(best_model)
 
             # Early-stopping mechanism
-            if avg_vld_lss >= 2 * avg_epoch_lss:
+            if avg_vld_loss >= 2 * avg_epoch_loss:
                 if count < TOLERANCE:
                     count += 1
                 elif count >= TOLERANCE:
                     print("Stopped by early-stopping")
                     break
 
-    print(f"{mdl.name}: Training complete.")
+    print(f"{model.name}: Training complete.")
 
     if returns:
-        return model_queue, mdl
+        return m_queue, model
 
 
 @torch.no_grad()
-def evaluate(mdl: dmodel.TFModel, test_loader: DataLoader, returns: bool = False) -> tuple:
-    mdl.eval()
+def evaluate(model: dmodel.TFModel, eval_loader: DataLoader, returns: bool = False) -> tuple:
+    model.eval()
 
-    total_tst_lss = 0.0
-    """
-    total_tst_mtx = torch.zeros(3, 3, dtype=torch.int, device=torch.device("cuda:0" if torch.cuda.is_available()
-                                else "cpu"))
-    """
-    total_top_k_prob = []
-    total_top_k_idx = []
+    eval_loss = 0.0
 
-    tst_steps = len(test_loader)
+    eval_pred_ls = []
+    eval_lbl_ls = []
 
-    for _, (seq, patt, lbl) in enumerate(test_loader):
-        lbl = lbl.squeeze(1)
+    eval_steps = len(eval_loader)
+
+    for _, (seq, patt, lbl) in enumerate(eval_loader):
+        lbl = lbl.squeeze(1)  # The shape of NLLLoss label is (N)
         lbl = lbl.type(torch.long)
 
-        batch_tst_lss, batch_tst_pred = valid_process(mdl=mdl, sequence=seq, pattern=patt, label=lbl)
-        total_tst_lss += batch_tst_lss
+        batch_eval_loss, batch_eval_pred = valid_process(model=model, sequence=seq, pattern=patt, label=lbl)
+        batch_pred_ls = batch_eval_pred.tolist()
+        batch_lbl_ls = lbl.tolist()
 
-        """
-        # Confusion matrix
-        batch_tst_mtx = metrics.confusion_mtx(predict=batch_tst_pred, label=lbl)
-        total_tst_mtx += batch_tst_mtx
-        """
+        for i in batch_pred_ls:
+            eval_pred_ls.append(i)
+        for i in batch_lbl_ls:
+            eval_lbl_ls.append(i)
 
-    # tst_acc, tst_pre, tst_rec, tst_f1, tst_mcc = metrics.metrics(total_tst_mtx)
-    avg_tst_loss = total_tst_lss / tst_steps
+        # Loss value of each batch.
+        eval_loss += batch_eval_loss
+
+    avg_eval_loss = eval_loss / eval_steps
+
+    eval_pred = torch.tensor(eval_pred_ls)
+    eval_lbl = torch.tensor(eval_lbl_ls)
+
+    pmf = metrics.pmf(eval_pred, eval_lbl)
+    pse = metrics.pse(eval_pred, eval_lbl)
+    topk_acc = metrics.topk_acc(eval_pred, eval_lbl, k=3)
+    binary_acc, binary_spe, binary_sen, binary_mcc = metrics.binary_metric(eval_pred, eval_lbl)
 
     # Print evaluation result
-    print(f"Evaluate {mdl.name}")
-    """
-    print(f"| Average Loss: {avg_tst_loss:.4f} | Accuracy: {tst_acc:.4f} | Precision: {tst_pre:.4f} | Recall: "
-          f"{tst_rec:.4f} | F1-score: {tst_f1:.4f} | MCC: {tst_mcc:.4f} |")
-    """
-    # TODO: New output of evaluation.
+    print(f"Evaluate {model.name}")
+    print(f"| Average Evaluation Loss: {avg_eval_loss:.3f} |")
+    print(f"| PMF: {pmf:.3f} | PSE: {pse:.3f} |")
+    print(f"| Top-k Accuracy: {topk_acc:.3f} |")
+    print(f"PN Binary Performance")
+    print(f"| Accuracy: {binary_acc:.3f} | Specificity: {binary_spe:.3f} | Sensitivity: {binary_sen:.3f} | "
+          f"MCC: {binary_mcc:.3f} |")
 
     if returns:
-        return total_top_k_idx, total_top_k_prob
+        return eval_pred, eval_lbl

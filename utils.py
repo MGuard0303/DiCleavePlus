@@ -11,7 +11,8 @@ from sklearn import preprocessing
 
 # This function generates one_hot_encoding from input sequences
 # The shape of output is (Batch, Length, Dimension)
-def one_hot_encoding(inputs: list | np.ndarray, token: list, pad: bool = False, max_length: int = None) -> torch.Tensor:
+def one_hot_encoding(inputs: list | np.ndarray, token: list, is_pad: bool = False, max_length: int = None) -> (
+        torch.Tensor):
     label_encoder = preprocessing.LabelEncoder()
     label_encoder.fit(token)
     one_hots = []
@@ -25,7 +26,7 @@ def one_hot_encoding(inputs: list | np.ndarray, token: list, pad: bool = False, 
         for i in range(len(int_tensor)):
             oh_tensor[i, int_tensor[i]] = 1.0
 
-        if pad and max_length is not None:
+        if is_pad and max_length is not None:
             oh_tensor = torch.transpose(oh_tensor, dim0=0, dim1=1)
             oh_tensor = F.pad(oh_tensor, (0, max_length - oh_tensor.size(1)))
             oh_tensor = torch.transpose(oh_tensor, dim0=0, dim1=1)
@@ -93,14 +94,14 @@ def convert_kmer(k_mer: list, vocab: dict, dtype: torch.dtype = None) -> torch.T
 
 
 # Obtain kmer embedding from inputs
-def kmer_embed(inputs: list | np.ndarray, vocab: dict, k: int, pad: bool = False, max_length: int = None,
+def kmer_embed(inputs: list | np.ndarray, vocab: dict, k: int, is_pad: bool = False, max_length: int = None,
                dtype: torch.dtype = None) -> torch.Tensor:
     k_tensors = []
 
     for i in inputs:
         k_mer = kmer(seq=i, k=k)
 
-        if pad is True:
+        if is_pad is True:
             k_mer = pad_kmer(k_mer=k_mer, max_length=max_length)
 
         k_tensor = convert_kmer(k_mer=k_mer, vocab=vocab, dtype=dtype)
@@ -117,16 +118,14 @@ def kmer_embed(inputs: list | np.ndarray, vocab: dict, k: int, pad: bool = False
 
 # Separate training set and testing set for a specific fold
 # Return a tuple of (training_tensor, test_tensor)
-def separate_tensor(inputs: torch.Tensor, curr_fold: int, tol_fold: int, fold_size: int) -> tuple:
+def separate_tensor(inputs: torch.Tensor, curr_fold: int, total_fold: int, fold_size: int) -> tuple:
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     if curr_fold == 0:
         tst = inputs[0:fold_size]
         trn = inputs[fold_size:]
-
-    elif curr_fold == tol_fold - 1:
+    elif curr_fold == total_fold - 1:
         tst = inputs[curr_fold * fold_size:]
         trn = inputs[0:curr_fold * fold_size]
-
     else:
         tst = inputs[curr_fold * fold_size:(curr_fold + 1) * fold_size]
         trn1 = inputs[0:curr_fold * fold_size]
@@ -145,7 +144,7 @@ def save_parameter(model: nn.Module, path: str) -> None:
 
 
 class ModelQ:
-    def __init__(self, k):
+    def __init__(self, k: int):
         self.queue = deque()
         self.k = k
 
@@ -166,7 +165,7 @@ class ModelQ:
 
 
 # Delete files with specified chars
-def delete_files(path, chars):
+def delete_files(path: str, chars: str) -> None:
     del_file = []
     files = os.listdir(path)
 

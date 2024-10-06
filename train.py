@@ -32,33 +32,38 @@ with open("dataset/rnafold/dataset_b/pre_processed.pickle", "rb") as f:
 
 HIDDEN_FEATURE = 32
 
-sequence_embedding = dmodel.EmbeddingLayer(hidden_feature=HIDDEN_FEATURE, softmax_dim=1, is_sec=False).to(device)
-secondary_embedding = dmodel.EmbeddingLayer(hidden_feature=HIDDEN_FEATURE, softmax_dim=1, is_sec=True).to(device)
-union_fusion_sequence = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, HIDDEN_FEATURE), pool_type=2)
-union_fusion_pattern = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, HIDDEN_FEATURE), pool_type=2)
+sequence_embedding = (dmodel.EmbeddingLayer(hidden_feature=HIDDEN_FEATURE, softmax_dim=1, is_secondary_structure=False).
+                      to(device))
+secondary_embedding = (dmodel.EmbeddingLayer(hidden_feature=HIDDEN_FEATURE, softmax_dim=1, is_secondary_structure=True).
+                       to(device))
+union_fusion_sequence = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, HIDDEN_FEATURE), pool_type="2d")
+union_fusion_pattern = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, HIDDEN_FEATURE), pool_type="2d")
 
 for fold in range(5):
     # Get training data and test data
-    seq_trn_1, seq_tst_1 = utils.separate_tensor(inputs=pp["seq_1"], curr_fold=fold, tol_fold=5, fold_size=fold_size)
-    seq_trn_2, seq_tst_2 = utils.separate_tensor(inputs=pp["seq_2"], curr_fold=fold, tol_fold=5, fold_size=fold_size)
-    seq_trn_3, seq_tst_3 = utils.separate_tensor(inputs=pp["seq_3"], curr_fold=fold, tol_fold=5, fold_size=fold_size)
+    seq_trn_1, seq_tst_1 = utils.separate_tensor(inputs=pp["seq_1"], curr_fold=fold, total_fold=5, fold_size=fold_size)
+    seq_trn_2, seq_tst_2 = utils.separate_tensor(inputs=pp["seq_2"], curr_fold=fold, total_fold=5, fold_size=fold_size)
+    seq_trn_3, seq_tst_3 = utils.separate_tensor(inputs=pp["seq_3"], curr_fold=fold, total_fold=5, fold_size=fold_size)
 
-    db_trn_1, db_tst_1 = utils.separate_tensor(inputs=pp["db_1"], curr_fold=fold, tol_fold=5, fold_size=fold_size)
-    db_trn_2, db_tst_2 = utils.separate_tensor(inputs=pp["db_2"], curr_fold=fold, tol_fold=5, fold_size=fold_size)
-    db_trn_3, db_tst_3 = utils.separate_tensor(inputs=pp["db_3"], curr_fold=fold, tol_fold=5, fold_size=fold_size)
+    db_trn_1, db_tst_1 = utils.separate_tensor(inputs=pp["db_1"], curr_fold=fold, total_fold=5, fold_size=fold_size)
+    db_trn_2, db_tst_2 = utils.separate_tensor(inputs=pp["db_2"], curr_fold=fold, total_fold=5, fold_size=fold_size)
+    db_trn_3, db_tst_3 = utils.separate_tensor(inputs=pp["db_3"], curr_fold=fold, total_fold=5, fold_size=fold_size)
 
-    patt_trn_1, patt_tst_1 = utils.separate_tensor(inputs=pp["patt_1"], curr_fold=fold, tol_fold=5, fold_size=fold_size)
-    patt_trn_2, patt_tst_2 = utils.separate_tensor(inputs=pp["patt_2"], curr_fold=fold, tol_fold=5, fold_size=fold_size)
-    patt_trn_3, patt_tst_3 = utils.separate_tensor(inputs=pp["patt_3"], curr_fold=fold, tol_fold=5, fold_size=fold_size)
+    patt_trn_1, patt_tst_1 = utils.separate_tensor(inputs=pp["patt_1"], curr_fold=fold, total_fold=5,
+                                                   fold_size=fold_size)
+    patt_trn_2, patt_tst_2 = utils.separate_tensor(inputs=pp["patt_2"], curr_fold=fold, total_fold=5,
+                                                   fold_size=fold_size)
+    patt_trn_3, patt_tst_3 = utils.separate_tensor(inputs=pp["patt_3"], curr_fold=fold, total_fold=5,
+                                                   fold_size=fold_size)
 
-    patt_db_trn_1, patt_db_tst_1 = utils.separate_tensor(inputs=pp["patt_db_1"], curr_fold=fold, tol_fold=5,
+    patt_db_trn_1, patt_db_tst_1 = utils.separate_tensor(inputs=pp["patt_db_1"], curr_fold=fold, total_fold=5,
                                                          fold_size=fold_size)
-    patt_db_trn_2, patt_db_tst_2 = utils.separate_tensor(inputs=pp["patt_db_2"], curr_fold=fold, tol_fold=5,
+    patt_db_trn_2, patt_db_tst_2 = utils.separate_tensor(inputs=pp["patt_db_2"], curr_fold=fold, total_fold=5,
                                                          fold_size=fold_size)
-    patt_db_trn_3, patt_db_tst_3 = utils.separate_tensor(inputs=pp["patt_db_3"], curr_fold=fold, tol_fold=5,
+    patt_db_trn_3, patt_db_tst_3 = utils.separate_tensor(inputs=pp["patt_db_3"], curr_fold=fold, total_fold=5,
                                                          fold_size=fold_size)
 
-    lbl_trn, lbl_tst = utils.separate_tensor(inputs=pp["label"], curr_fold=fold, tol_fold=5, fold_size=fold_size)
+    lbl_trn, lbl_tst = utils.separate_tensor(inputs=pp["label"], curr_fold=fold, total_fold=5, fold_size=fold_size)
 
     seq_trn = sequence_embedding(seq_trn_1, seq_trn_2, seq_trn_3)
     seq_tst = sequence_embedding(seq_tst_1, seq_tst_2, seq_tst_3)
@@ -106,9 +111,5 @@ for fold in range(5):
 
     epoch = 50
     print(f"fold_{fold}")
-    model_q, last_mdl = logics.train(mdl=model, train_loader=dl_trn, valid_loader=dl_vld, epochs=epoch,
-                                     valid_per_epochs=5, returns=True)
-
-    best_mdl = model_q.queue.popleft()
-    best_mdl.eval()
-    logics.evaluate(mdl=best_mdl, test_loader=dl_tst)
+    model_queue, last_model = logics.train(model=model, train_loader=dl_trn, valid_loader=dl_vld, epochs=epoch,
+                                           valid_per_epochs=5, returns=True)

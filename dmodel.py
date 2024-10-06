@@ -6,7 +6,7 @@ from torch import nn
 
 class TFModel(nn.Module):
     def __init__(self, embed_feature: int, hidden_feature: int, num_lstm_layer: int = 2, num_attn_head: int = 8,
-                 tf_dim_feedforward: int = 256, num_tf_layer: int = 2, conv_kernel_size: int = 3, name: str = "TFModel"
+                 tf_dim_forward: int = 256, num_tf_layer: int = 2, conv_kernel_size: int = 3, name: str = "TFModel"
                  ):
         super().__init__()
         self.name = name
@@ -18,7 +18,7 @@ class TFModel(nn.Module):
 
         # Layers for Transformer structure
         self.encoder = nn.TransformerEncoderLayer(d_model=embed_feature, nhead=num_attn_head,
-                                                  dim_feedforward=tf_dim_feedforward, batch_first=True)
+                                                  dim_feedforward=tf_dim_forward, batch_first=True)
         self.encoder_container = nn.TransformerEncoder(encoder_layer=self.encoder, num_layers=num_tf_layer,
                                                        enable_nested_tensor=False)
         self.position_encoder = PositionEncoder(d_model=embed_feature, length=200, batch_first=True)
@@ -32,7 +32,7 @@ class TFModel(nn.Module):
         self.pattern_linear = nn.Linear(in_features=14 * embed_feature, out_features=hidden_feature)
         self.sequence_linear = nn.Linear(in_features=200 * embed_feature, out_features=hidden_feature)
 
-        self.union_fusion = AttentionalFeatureFusionLayer(glo_pool_size=hidden_feature, pool_type=1)
+        self.union_fusion = AttentionalFeatureFusionLayer(glo_pool_size=hidden_feature, pool_type="1d")
 
         self.flatten = nn.Flatten()
         self.fc = nn.Sequential(
@@ -159,13 +159,13 @@ class GatedFusionLayer(nn.Module):
 
 # Use Attentional Feature Fusion (AFF) module to fuse two feature.
 class AttentionalFeatureFusionLayer(nn.Module):
-    def __init__(self, glo_pool_size: int | tuple, pool_type: int):
+    def __init__(self, glo_pool_size: int | tuple, pool_type: str):
         super().__init__()
-        if pool_type == 1:
+        if pool_type == "1d":
             self.global_avg_pool = nn.AvgPool1d(kernel_size=glo_pool_size)
             self.pw_pool = nn.Conv1d(in_channels=1, out_channels=1, kernel_size=1)
             self.bn = nn.BatchNorm1d(num_features=1)
-        elif pool_type == 2:
+        elif pool_type == "2d":
             self.global_avg_pool = nn.AvgPool2d(kernel_size=glo_pool_size)
             self.pw_pool = nn.Conv2d(in_channels=1, out_channels=1, kernel_size=(1, 1))
             self.bn = nn.BatchNorm2d(num_features=1)
@@ -202,9 +202,9 @@ class AttentionalFeatureFusionLayer(nn.Module):
 
 # Embed and fuse sequence and secondary kmer raw tensors into sequence input and pattern input.
 class EmbeddingLayer(nn.Module):
-    def __init__(self, hidden_feature: int, softmax_dim: int, is_sec: bool = False):
+    def __init__(self, hidden_feature: int, softmax_dim: int, is_secondary_structure: bool = False):
         super().__init__()
-        if is_sec:
+        if is_secondary_structure:
             self.e1 = nn.Embedding(num_embeddings=4, embedding_dim=hidden_feature, padding_idx=0)
             self.e2 = nn.Embedding(num_embeddings=13, embedding_dim=hidden_feature, padding_idx=0)
             self.e3 = nn.Embedding(num_embeddings=40, embedding_dim=hidden_feature, padding_idx=0)
