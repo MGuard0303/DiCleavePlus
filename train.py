@@ -40,44 +40,44 @@ union_fusion_sequence = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200,
 union_fusion_pattern = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, HIDDEN_FEATURE), pool_type="2d")
 
 for fold in range(5):
-    # Get training data and test data
-    seq_trn_1, seq_tst_1 = utils.separate_tensor(inputs=pp["seq_1"], curr_fold=fold, total_fold=5, fold_size=fold_size)
-    seq_trn_2, seq_tst_2 = utils.separate_tensor(inputs=pp["seq_2"], curr_fold=fold, total_fold=5, fold_size=fold_size)
-    seq_trn_3, seq_tst_3 = utils.separate_tensor(inputs=pp["seq_3"], curr_fold=fold, total_fold=5, fold_size=fold_size)
+    # Get training data and evaluation data
+    seq_trn_1, seq_eval_1 = utils.separate_tensor(inputs=pp["seq_1"], curr_fold=fold, total_fold=5, fold_size=fold_size)
+    seq_trn_2, seq_eval_2 = utils.separate_tensor(inputs=pp["seq_2"], curr_fold=fold, total_fold=5, fold_size=fold_size)
+    seq_trn_3, seq_eval_3 = utils.separate_tensor(inputs=pp["seq_3"], curr_fold=fold, total_fold=5, fold_size=fold_size)
 
-    db_trn_1, db_tst_1 = utils.separate_tensor(inputs=pp["db_1"], curr_fold=fold, total_fold=5, fold_size=fold_size)
-    db_trn_2, db_tst_2 = utils.separate_tensor(inputs=pp["db_2"], curr_fold=fold, total_fold=5, fold_size=fold_size)
-    db_trn_3, db_tst_3 = utils.separate_tensor(inputs=pp["db_3"], curr_fold=fold, total_fold=5, fold_size=fold_size)
+    db_trn_1, db_eval_1 = utils.separate_tensor(inputs=pp["db_1"], curr_fold=fold, total_fold=5, fold_size=fold_size)
+    db_trn_2, db_eval_2 = utils.separate_tensor(inputs=pp["db_2"], curr_fold=fold, total_fold=5, fold_size=fold_size)
+    db_trn_3, db_eval_3 = utils.separate_tensor(inputs=pp["db_3"], curr_fold=fold, total_fold=5, fold_size=fold_size)
 
-    patt_trn_1, patt_tst_1 = utils.separate_tensor(inputs=pp["patt_1"], curr_fold=fold, total_fold=5,
-                                                   fold_size=fold_size)
-    patt_trn_2, patt_tst_2 = utils.separate_tensor(inputs=pp["patt_2"], curr_fold=fold, total_fold=5,
-                                                   fold_size=fold_size)
-    patt_trn_3, patt_tst_3 = utils.separate_tensor(inputs=pp["patt_3"], curr_fold=fold, total_fold=5,
-                                                   fold_size=fold_size)
+    patt_trn_1, patt_eval_1 = utils.separate_tensor(inputs=pp["patt_1"], curr_fold=fold, total_fold=5,
+                                                    fold_size=fold_size)
+    patt_trn_2, patt_eval_2 = utils.separate_tensor(inputs=pp["patt_2"], curr_fold=fold, total_fold=5,
+                                                    fold_size=fold_size)
+    patt_trn_3, patt_eval_3 = utils.separate_tensor(inputs=pp["patt_3"], curr_fold=fold, total_fold=5,
+                                                    fold_size=fold_size)
 
-    patt_db_trn_1, patt_db_tst_1 = utils.separate_tensor(inputs=pp["patt_db_1"], curr_fold=fold, total_fold=5,
-                                                         fold_size=fold_size)
-    patt_db_trn_2, patt_db_tst_2 = utils.separate_tensor(inputs=pp["patt_db_2"], curr_fold=fold, total_fold=5,
-                                                         fold_size=fold_size)
-    patt_db_trn_3, patt_db_tst_3 = utils.separate_tensor(inputs=pp["patt_db_3"], curr_fold=fold, total_fold=5,
-                                                         fold_size=fold_size)
+    patt_db_trn_1, patt_db_eval_1 = utils.separate_tensor(inputs=pp["patt_db_1"], curr_fold=fold, total_fold=5,
+                                                          fold_size=fold_size)
+    patt_db_trn_2, patt_db_eval_2 = utils.separate_tensor(inputs=pp["patt_db_2"], curr_fold=fold, total_fold=5,
+                                                          fold_size=fold_size)
+    patt_db_trn_3, patt_db_eval_3 = utils.separate_tensor(inputs=pp["patt_db_3"], curr_fold=fold, total_fold=5,
+                                                          fold_size=fold_size)
 
-    lbl_trn, lbl_tst = utils.separate_tensor(inputs=pp["label"], curr_fold=fold, total_fold=5, fold_size=fold_size)
+    lbl_trn, lbl_eval = utils.separate_tensor(inputs=pp["label"], curr_fold=fold, total_fold=5, fold_size=fold_size)
 
     seq_trn = sequence_embedding(seq_trn_1, seq_trn_2, seq_trn_3)
-    seq_tst = sequence_embedding(seq_tst_1, seq_tst_2, seq_tst_3)
+    seq_eval = sequence_embedding(seq_eval_1, seq_eval_2, seq_eval_3)
     db_trn = secondary_embedding(db_trn_1, db_trn_2, db_trn_3)
-    db_tst = secondary_embedding(db_tst_1, db_tst_2, db_tst_3)
+    db_eval = secondary_embedding(db_eval_1, db_eval_2, db_eval_3)
     patt_trn = sequence_embedding(patt_trn_1, patt_trn_2, patt_trn_3)
-    patt_tst = sequence_embedding(patt_tst_1, patt_tst_2, patt_tst_3)
+    patt_eval = sequence_embedding(patt_eval_1, patt_eval_2, patt_eval_3)
     patt_db_trn = secondary_embedding(patt_db_trn_1, patt_db_trn_2, patt_db_trn_3)
-    patt_db_tst = secondary_embedding(patt_db_tst_1, patt_db_tst_2, patt_db_tst_3)
+    patt_db_eval = secondary_embedding(patt_db_eval_1, patt_db_eval_2, patt_db_eval_3)
 
     sequence_trn, _ = union_fusion_sequence(seq_trn, db_trn)
-    sequence_tst, _ = union_fusion_sequence(seq_tst, db_tst)
+    sequence_eval, _ = union_fusion_sequence(seq_eval, db_eval)
     pattern_trn, _ = union_fusion_pattern(patt_trn, patt_db_trn)
-    pattern_tst, _ = union_fusion_pattern(patt_tst, patt_db_tst)
+    pattern_eval, _ = union_fusion_pattern(patt_eval, patt_db_eval)
 
     # Get validation data from training data
     vld_size = math.floor(len(seq_trn_1) * 0.1)
@@ -97,11 +97,11 @@ for fold in range(5):
     # Wrap data to Dataset
     ds_trn = TensorDataset(sequence_trn, pattern_trn, lbl_trn)
     ds_vld = TensorDataset(sequence_vld, pattern_vld, lbl_vld)
-    ds_tst = TensorDataset(sequence_tst, pattern_tst, lbl_tst)
+    ds_eval = TensorDataset(sequence_eval, pattern_eval, lbl_eval)
 
     dl_trn = DataLoader(ds_trn, batch_size=128, shuffle=True)
     dl_vld = DataLoader(ds_vld, batch_size=128, shuffle=True)
-    dl_tst = DataLoader(ds_tst, batch_size=128, shuffle=False)
+    dl_eval = DataLoader(ds_eval, batch_size=128, shuffle=False)
 
     # Initial model
     model = dmodel.TFModel(embed_feature=32, hidden_feature=64)

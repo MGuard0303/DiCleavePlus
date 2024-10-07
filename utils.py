@@ -117,25 +117,25 @@ def kmer_embed(inputs: list | np.ndarray, vocab: dict, k: int, is_pad: bool = Fa
 
 
 # Separate training set and testing set for a specific fold
-# Return a tuple of (training_tensor, test_tensor)
+# Return a tuple of (training_tensor, evaluation_tensor)
 def separate_tensor(inputs: torch.Tensor, curr_fold: int, total_fold: int, fold_size: int) -> tuple:
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     if curr_fold == 0:
-        tst = inputs[0:fold_size]
-        trn = inputs[fold_size:]
+        evaluate = inputs[0:fold_size]
+        train = inputs[fold_size:]
     elif curr_fold == total_fold - 1:
-        tst = inputs[curr_fold * fold_size:]
-        trn = inputs[0:curr_fold * fold_size]
+        evaluate = inputs[curr_fold * fold_size:]
+        train = inputs[0:curr_fold * fold_size]
     else:
-        tst = inputs[curr_fold * fold_size:(curr_fold + 1) * fold_size]
+        evaluate = inputs[curr_fold * fold_size:(curr_fold + 1) * fold_size]
         trn1 = inputs[0:curr_fold * fold_size]
         trn2 = inputs[(curr_fold + 1) * fold_size:]
-        trn = torch.cat([trn1, trn2], dim=0)
+        train = torch.cat([trn1, trn2], dim=0)
 
-    trn = trn.to(device)
-    tst = tst.to(device)
+    train = train.to(device)
+    evaluate = evaluate.to(device)
 
-    return trn, tst
+    return train, evaluate
 
 
 # Save model state dictionary to path
