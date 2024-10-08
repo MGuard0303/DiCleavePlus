@@ -109,7 +109,17 @@ for fold in range(5):
     model.optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     model.to(device)
 
+    # Training setup.
     epoch = 50
     print(f"fold_{fold}")
     model_queue, last_model = logics.train(model=model, train_loader=dl_trn, valid_loader=dl_vld, epochs=epoch,
                                            valid_per_epochs=5, returns=True)
+
+    # Evaluation setup.
+    for idx, mdl in enumerate(model_queue.queue):
+        mdl.name = f"model{idx}"
+        logics.evaluate(model=mdl, eval_loader=dl_eval)
+
+    last_model.name = "last_model"
+    logics.evaluate(model=last_model, eval_loader=dl_eval)
+
