@@ -87,7 +87,7 @@ def train(model: dmodel.TFModel, train_loader: DataLoader, valid_loader: DataLoa
                 m_queue.stack(best_model)
 
             # Early-stopping mechanism
-            if avg_vld_loss >= 2 * avg_epoch_loss:
+            if avg_vld_loss >= 1.5 * avg_epoch_loss:
                 if count < tolerance:
                     count += 1
                 elif count >= tolerance:
