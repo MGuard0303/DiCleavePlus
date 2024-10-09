@@ -36,7 +36,7 @@ union_fusion_sequence = (dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200
 union_fusion_pattern = (dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, HIDDEN_FEATURE), pool_type="2d").
                         to(device))
 
-for fold in tqdm(range(5)):
+for fold in range(5):
     # Get training data and evaluation data
     seq_trn_1, seq_eval_1 = utils.separate_tensor(inputs=pp["seq_1"], curr_fold=fold, total_fold=5, fold_size=fold_size)
     seq_trn_2, seq_eval_2 = utils.separate_tensor(inputs=pp["seq_2"], curr_fold=fold, total_fold=5, fold_size=fold_size)
@@ -123,9 +123,9 @@ for fold in tqdm(range(5)):
     # Evaluation setup.
     for idx, mdl in enumerate(model_queue.queue):
         mdl.name = f"model{idx}_fold{fold}"
-        logics.evaluate(model=mdl, eval_loader=dl_eval)
         utils.save_parameter(model=mdl, path="env/20241009", filename=f"{mdl.name}.pt")
+        logics.evaluate(model=mdl, eval_loader=dl_eval)
 
     model_fnl.name = f"model_fnl_fold{fold}"
-    logics.evaluate(model=model_fnl, eval_loader=dl_eval)
     utils.save_parameter(model=model_fnl, path="env/20241009", filename=f"{model_fnl.name}.pt")
+    logics.evaluate(model=model_fnl, eval_loader=dl_eval)
