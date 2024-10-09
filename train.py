@@ -105,14 +105,23 @@ for fold in range(5):
     # Training setup.
     epoch = 50
     print(f"fold_{fold}")
-    model_queue, last_model = logics.train(model=model, train_loader=dl_trn, valid_loader=dl_vld, epochs=epoch,
-                                           valid_per_epochs=5, returns=True)
+    model_queue, model_fnl = logics.train(model=model, train_loader=dl_trn, valid_loader=dl_vld, epochs=epoch,
+                                          valid_per_epochs=5, returns=True)
+
+    # Delete files if necessary.
+    try:
+        utils.delete_files()
+    except FileNotFoundError as e:
+        print(f"Catch error {e}")
+    except IsADirectoryError as e:
+        print(f"Catch error {e}")
 
     # Evaluation setup.
     for idx, mdl in enumerate(model_queue.queue):
-        mdl.name = f"model{idx}"
+        mdl.name = f"model{idx}_fold{fold}"
         logics.evaluate(model=mdl, eval_loader=dl_eval)
+        utils.save_parameter(model=mdl, path="env/20241009", filename=f"{mdl.name}.pt")
 
-    last_model.name = "last_model"
-    logics.evaluate(model=last_model, eval_loader=dl_eval)
-
+    model_fnl.name = f"model_fnl_fold{fold}"
+    logics.evaluate(model=model_fnl, eval_loader=dl_eval)
+    utils.save_parameter(model=model_fnl, path="env/20241009", filename=f"{model_fnl.name}.pt")

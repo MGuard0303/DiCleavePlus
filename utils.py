@@ -1,5 +1,6 @@
 import os
 from collections import deque
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -139,8 +140,13 @@ def separate_tensor(inputs: torch.Tensor, curr_fold: int, total_fold: int, fold_
 
 
 # Save model state dictionary to path
-def save_parameter(model: nn.Module, path: str) -> None:
-    torch.save(model.state_dict(), path)
+def save_parameter(model: nn.Module, path: str, filename: str) -> None:
+    path = Path(path)
+    if not path.exists():
+        path.mkdir(parents=True)
+
+    dest = Path(f"{path}/{filename}")
+    torch.save(model.state_dict(), dest)
 
 
 class ModelQ:
@@ -165,17 +171,24 @@ class ModelQ:
 
 
 # Delete files with specified chars
-def delete_files(path: str, chars: str) -> None:
-    del_file = []
-    files = os.listdir(path)
+def delete_files(path: str = None, chars: str = None) -> None:
+    if path is None and chars is None:
+        pass
+    else:
+        del_file = []
+        files = os.listdir(path)
 
-    for file in files:
-        if file.find(chars) != -1:
-            del_file.append(file)
+        for file in files:
+            if file.find(chars) != -1:
+                del_file.append(file)
+            else:
+                raise FileNotFoundError("No file with specified character exists.")
 
-    for f in del_file:
-        del_path = os.path.join(path, f)
+        for f in del_file:
+            del_path = os.path.join(path, f)
 
-        # Check deleting a file
-        if os.path.isfile(del_path):
-            os.remove(del_path)
+            # Check deleting a file
+            if os.path.isfile(del_path):
+                os.remove(del_path)
+            else:
+                raise IsADirectoryError("You are trying to delete a directory, not a file.")
