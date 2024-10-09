@@ -127,6 +127,7 @@ for fold in range(5):
         utils.save_parameter(model=mdl, path=f"expt/{date}", filename=f"{mdl.name}.pt")
         logics.evaluate(model=mdl, eval_loader=dl_eval)
 
-    model_fnl.name = f"model_fnl_fold{fold}"
+    timestamp = datetime.datetime.now().strftime("%H%M%S")
+    model_fnl.name = f"model_fnl_fold{fold}_{timestamp}"
     utils.save_parameter(model=model_fnl, path=f"expt/{date}", filename=f"{model_fnl.name}.pt")
     logics.evaluate(model=model_fnl, eval_loader=dl_eval)
