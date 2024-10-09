@@ -11,7 +11,7 @@ import logics
 import utils
 
 
-current = datetime.datetime.now().strftime("%Y%m%d")
+date = datetime.datetime.now().strftime("%Y%m%d")
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -96,9 +96,9 @@ for fold in range(5):
     ds_vld = TensorDataset(sequence_vld, pattern_vld, lbl_vld)
     ds_eval = TensorDataset(sequence_eval, pattern_eval, lbl_eval)
 
-    dl_trn = DataLoader(ds_trn, batch_size=128, shuffle=True)
-    dl_vld = DataLoader(ds_vld, batch_size=128, shuffle=True)
-    dl_eval = DataLoader(ds_eval, batch_size=128, shuffle=False)
+    dl_trn = DataLoader(ds_trn, batch_size=256, shuffle=True)
+    dl_vld = DataLoader(ds_vld, batch_size=256, shuffle=True)
+    dl_eval = DataLoader(ds_eval, batch_size=256, shuffle=False)
 
     # Initial model
     model = dmodel.TFModel(embed_feature=32, hidden_feature=64)
@@ -122,10 +122,11 @@ for fold in range(5):
 
     # Evaluation setup.
     for idx, mdl in enumerate(model_queue.queue):
-        mdl.name = f"model{idx}_fold{fold}"
-        utils.save_parameter(model=mdl, path=f"expt/{current}", filename=f"{mdl.name}.pt")
+        timestamp = datetime.datetime.now().strftime("%H%M%S")
+        mdl.name = f"model{idx}_fold{fold}_{timestamp}"
+        utils.save_parameter(model=mdl, path=f"expt/{date}", filename=f"{mdl.name}.pt")
         logics.evaluate(model=mdl, eval_loader=dl_eval)
 
     model_fnl.name = f"model_fnl_fold{fold}"
-    utils.save_parameter(model=model_fnl, path=f"expt/{current}", filename=f"{model_fnl.name}.pt")
+    utils.save_parameter(model=model_fnl, path=f"expt/{date}", filename=f"{model_fnl.name}.pt")
     logics.evaluate(model=model_fnl, eval_loader=dl_eval)
