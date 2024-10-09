@@ -4,6 +4,7 @@ import pickle
 import pandas as pd
 import torch
 from torch.utils.data import TensorDataset, DataLoader
+from tqdm import tqdm
 
 import logics
 import dmodel
@@ -35,7 +36,7 @@ union_fusion_sequence = (dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200
 union_fusion_pattern = (dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, HIDDEN_FEATURE), pool_type="2d").
                         to(device))
 
-for fold in range(5):
+for fold in tqdm(range(5)):
     # Get training data and evaluation data
     seq_trn_1, seq_eval_1 = utils.separate_tensor(inputs=pp["seq_1"], curr_fold=fold, total_fold=5, fold_size=fold_size)
     seq_trn_2, seq_eval_2 = utils.separate_tensor(inputs=pp["seq_2"], curr_fold=fold, total_fold=5, fold_size=fold_size)

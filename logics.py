@@ -3,6 +3,7 @@ import copy
 import torch
 
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 import metrics
 import dmodel
@@ -40,7 +41,7 @@ def train(model: dmodel.TFModel, train_loader: DataLoader, valid_loader: DataLoa
           returns: bool = False) -> tuple:
     print(f"Model {model.name}: Start training...")
 
-    TOLERANCE = 3
+    tolerance = 3
     count = 0
     m_queue = utils.ModelQ(3)  # Save top-3 model parameters
     best_vld_loss = float("inf")
@@ -51,7 +52,7 @@ def train(model: dmodel.TFModel, train_loader: DataLoader, valid_loader: DataLoa
         # Training step
         trn_steps = len(train_loader)
 
-        for _, (seq, patt, lbl) in enumerate(train_loader):
+        for _, (seq, patt, lbl) in enumerate(tqdm(train_loader)):
             lbl = lbl.squeeze(1)  # The shape of NLLLoss label is (N)
             lbl = lbl.type(torch.long)
             batch_loss, _ = train_process(model=model, sequence=seq, pattern=patt, label=lbl)
@@ -68,7 +69,7 @@ def train(model: dmodel.TFModel, train_loader: DataLoader, valid_loader: DataLoa
 
             vld_steps = len(valid_loader)
 
-            for _, (seq, patt, lbl) in enumerate(valid_loader):
+            for _, (seq, patt, lbl) in enumerate(tqdm(valid_loader)):
                 lbl = lbl.squeeze(1)  # The shape of NLLLoss label is (N)
                 lbl = lbl.type(torch.long)
                 batch_vld_loss, _ = valid_process(model=model, sequence=seq, pattern=patt, label=lbl)
@@ -87,9 +88,9 @@ def train(model: dmodel.TFModel, train_loader: DataLoader, valid_loader: DataLoa
 
             # Early-stopping mechanism
             if avg_vld_loss >= 2 * avg_epoch_loss:
-                if count < TOLERANCE:
+                if count < tolerance:
                     count += 1
-                elif count >= TOLERANCE:
+                elif count >= tolerance:
                     print("Stopped by early-stopping")
                     break
 
@@ -110,7 +111,7 @@ def evaluate(model: dmodel.TFModel, eval_loader: DataLoader, returns: bool = Fal
 
     eval_steps = len(eval_loader)
 
-    for _, (seq, patt, lbl) in enumerate(eval_loader):
+    for _, (seq, patt, lbl) in enumerate(tqdm(eval_loader)):
         lbl = lbl.squeeze(1)  # The shape of NLLLoss label is (N)
         lbl = lbl.type(torch.long)
 
