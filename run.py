@@ -4,7 +4,6 @@ import pickle
 import pandas as pd
 import torch
 from torch.utils.data import TensorDataset, DataLoader
-from tqdm import tqdm
 
 import logics
 import dmodel
