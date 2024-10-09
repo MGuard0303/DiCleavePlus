@@ -29,8 +29,11 @@ sequence_embedding = (dmodel.EmbeddingLayer(hidden_feature=HIDDEN_FEATURE, softm
                       to(device))
 secondary_embedding = (dmodel.EmbeddingLayer(hidden_feature=HIDDEN_FEATURE, softmax_dim=1, is_secondary_structure=True).
                        to(device))
-union_fusion_sequence = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, HIDDEN_FEATURE), pool_type="2d")
-union_fusion_pattern = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, HIDDEN_FEATURE), pool_type="2d")
+
+union_fusion_sequence = (dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, HIDDEN_FEATURE), pool_type="2d").
+                         to(device))
+union_fusion_pattern = (dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, HIDDEN_FEATURE), pool_type="2d").
+                        to(device))
 
 for fold in range(5):
     # Get training data and evaluation data
