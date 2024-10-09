@@ -88,7 +88,7 @@ def pmf(pred: torch.Tensor, label: torch.Tensor) -> float:
     else:
         pred = pred.detach()
         pred = torch.exp(pred)
-        _, label_pred = torch.max(pred, dim=0)
+        _, label_pred = torch.max(pred, dim=1)
 
         label = label.detach()
 
@@ -116,7 +116,7 @@ def pse(pred: torch.Tensor, label: torch.Tensor) -> float:
         sum_delta = 0
         num = len(pred)
 
-        _, label_pred = torch.max(pred, dim=0)
+        _, label_pred = torch.max(pred, dim=1)
 
         for i in range(num):
             if label_pred[i].item() != label[i].item() and label_pred[i].item() * label[i].item() == 0:
@@ -141,10 +141,11 @@ def binary_metric(pred: torch.Tensor, label: torch.Tensor) -> tuple:
         pred = torch.exp(pred)
         label = label.detach()
 
+        epsilon = 1e-8
         tp, tn, fp, fn = 0, 0, 0, 0
         num = len(pred)
 
-        _, label_pred = torch.max(pred, dim=0)
+        _, label_pred = torch.max(pred, dim=1)
 
         for i in range(num):
             if label_pred[i].item != 0:
@@ -162,7 +163,7 @@ def binary_metric(pred: torch.Tensor, label: torch.Tensor) -> tuple:
         acc = (tp + tn) / (tp + tn + fp + fn)
         spe = tn / (tn + fp)
         sen = tp / (tp + fn)
-        mcc = ((tp * tn) - (fp * fn)) / math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
+        mcc = ((tp * tn) - (fp * fn)) / (math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn)) + epsilon)
 
         return acc, spe, sen, mcc
 

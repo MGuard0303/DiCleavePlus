@@ -1,3 +1,4 @@
+import datetime
 import math
 import pickle
 
@@ -5,10 +6,12 @@ import pandas as pd
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 
-import logics
 import dmodel
+import logics
 import utils
 
+
+current = datetime.datetime.now().strftime("%Y%m%d")
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -23,17 +26,15 @@ fold_size, _ = divmod(len(df), 5)
 with open("dataset/rnafold/dataset_b/pre_processed.pickle", "rb") as f:
     pp = pickle.load(f)
 
-HIDDEN_FEATURE = 32
+hidden_feature = 32
 
-sequence_embedding = (dmodel.EmbeddingLayer(hidden_feature=HIDDEN_FEATURE, softmax_dim=1, is_secondary_structure=False).
-                      to(device))
-secondary_embedding = (dmodel.EmbeddingLayer(hidden_feature=HIDDEN_FEATURE, softmax_dim=1, is_secondary_structure=True).
-                       to(device))
+seq_embedding = (dmodel.EmbeddingLayer(hidden_feature=hidden_feature, softmax_dim=1, is_secondary_structure=False).
+                 to(device))
+sec_embedding = (dmodel.EmbeddingLayer(hidden_feature=hidden_feature, softmax_dim=1, is_secondary_structure=True).
+                 to(device))
 
-union_fusion_sequence = (dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, HIDDEN_FEATURE), pool_type="2d").
-                         to(device))
-union_fusion_pattern = (dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, HIDDEN_FEATURE), pool_type="2d").
-                        to(device))
+union_fusion_seq = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, hidden_feature), pool_type="2d").to(device)
+union_fusion_patt = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, hidden_feature), pool_type="2d").to(device)
 
 for fold in range(5):
     # Get training data and evaluation data
@@ -61,19 +62,19 @@ for fold in range(5):
 
     lbl_trn, lbl_eval = utils.separate_tensor(inputs=pp["label"], curr_fold=fold, total_fold=5, fold_size=fold_size)
 
-    seq_trn = sequence_embedding(seq_trn_1, seq_trn_2, seq_trn_3)
-    seq_eval = sequence_embedding(seq_eval_1, seq_eval_2, seq_eval_3)
-    db_trn = secondary_embedding(db_trn_1, db_trn_2, db_trn_3)
-    db_eval = secondary_embedding(db_eval_1, db_eval_2, db_eval_3)
-    patt_trn = sequence_embedding(patt_trn_1, patt_trn_2, patt_trn_3)
-    patt_eval = sequence_embedding(patt_eval_1, patt_eval_2, patt_eval_3)
-    patt_db_trn = secondary_embedding(patt_db_trn_1, patt_db_trn_2, patt_db_trn_3)
-    patt_db_eval = secondary_embedding(patt_db_eval_1, patt_db_eval_2, patt_db_eval_3)
+    seq_trn = seq_embedding(seq_trn_1, seq_trn_2, seq_trn_3)
+    seq_eval = seq_embedding(seq_eval_1, seq_eval_2, seq_eval_3)
+    db_trn = sec_embedding(db_trn_1, db_trn_2, db_trn_3)
+    db_eval = sec_embedding(db_eval_1, db_eval_2, db_eval_3)
+    patt_trn = seq_embedding(patt_trn_1, patt_trn_2, patt_trn_3)
+    patt_eval = seq_embedding(patt_eval_1, patt_eval_2, patt_eval_3)
+    patt_db_trn = sec_embedding(patt_db_trn_1, patt_db_trn_2, patt_db_trn_3)
+    patt_db_eval = sec_embedding(patt_db_eval_1, patt_db_eval_2, patt_db_eval_3)
 
-    sequence_trn, _ = union_fusion_sequence(seq_trn, db_trn)
-    sequence_eval, _ = union_fusion_sequence(seq_eval, db_eval)
-    pattern_trn, _ = union_fusion_pattern(patt_trn, patt_db_trn)
-    pattern_eval, _ = union_fusion_pattern(patt_eval, patt_db_eval)
+    sequence_trn, _ = union_fusion_seq(seq_trn, db_trn)
+    sequence_eval, _ = union_fusion_seq(seq_eval, db_eval)
+    pattern_trn, _ = union_fusion_patt(patt_trn, patt_db_trn)
+    pattern_eval, _ = union_fusion_patt(patt_eval, patt_db_eval)
 
     # Get validation data from training data
     vld_size = math.floor(len(seq_trn_1) * 0.1)
@@ -122,9 +123,9 @@ for fold in range(5):
     # Evaluation setup.
     for idx, mdl in enumerate(model_queue.queue):
         mdl.name = f"model{idx}_fold{fold}"
-        utils.save_parameter(model=mdl, path="expt/20241009", filename=f"{mdl.name}.pt")
+        utils.save_parameter(model=mdl, path=f"expt/{current}", filename=f"{mdl.name}.pt")
         logics.evaluate(model=mdl, eval_loader=dl_eval)
 
     model_fnl.name = f"model_fnl_fold{fold}"
-    utils.save_parameter(model=model_fnl, path="expt/20241009", filename=f"{model_fnl.name}.pt")
+    utils.save_parameter(model=model_fnl, path=f"expt/{current}", filename=f"{model_fnl.name}.pt")
     logics.evaluate(model=model_fnl, eval_loader=dl_eval)
