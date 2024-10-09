@@ -122,9 +122,9 @@ for fold in range(5):
     # Evaluation setup.
     for idx, mdl in enumerate(model_queue.queue):
         mdl.name = f"model{idx}_fold{fold}"
-        utils.save_parameter(model=mdl, path="env/20241009", filename=f"{mdl.name}.pt")
+        utils.save_parameter(model=mdl, path="expt/20241009", filename=f"{mdl.name}.pt")
         logics.evaluate(model=mdl, eval_loader=dl_eval)
 
     model_fnl.name = f"model_fnl_fold{fold}"
-    utils.save_parameter(model=model_fnl, path="env/20241009", filename=f"{model_fnl.name}.pt")
+    utils.save_parameter(model=model_fnl, path="expt/20241009", filename=f"{model_fnl.name}.pt")
     logics.evaluate(model=model_fnl, eval_loader=dl_eval)
