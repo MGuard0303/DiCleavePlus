@@ -27,15 +27,15 @@ fold_size, _ = divmod(len(df), 5)
 with open("dataset/rnafold/dataset_b/pre_processed.pickle", "rb") as f:
     pp = pickle.load(f)
 
-hidden_feature = 32
+embed_feature = 32
 
-seq_embedding = (dmodel.EmbeddingLayer(hidden_feature=hidden_feature, softmax_dim=1, is_secondary_structure=False).
+seq_embedding = (dmodel.EmbeddingLayer(hidden_feature=embed_feature, softmax_dim=1, is_secondary_structure=False).
                  to(device))
-sec_embedding = (dmodel.EmbeddingLayer(hidden_feature=hidden_feature, softmax_dim=1, is_secondary_structure=True).
+sec_embedding = (dmodel.EmbeddingLayer(hidden_feature=embed_feature, softmax_dim=1, is_secondary_structure=True).
                  to(device))
 
-union_fusion_seq = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, hidden_feature), pool_type="2d").to(device)
-union_fusion_patt = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, hidden_feature), pool_type="2d").to(device)
+union_fusion_seq = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, embed_feature), pool_type="2d").to(device)
+union_fusion_patt = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, embed_feature), pool_type="2d").to(device)
 
 for fold in range(5):
     # Get training data and evaluation data
@@ -108,7 +108,7 @@ for fold in range(5):
     if not path.exists():
         path.mkdir(parents=True)
 
-    with open(f"{path}/dl_eval_{timestamp}.pkl", "wb") as f:
+    with open(f"{path}/dl_eval_fold{fold}_{timestamp}.pkl", "wb") as f:
         pickle.dump(dl_eval, f)
 
     # Initial model

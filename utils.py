@@ -10,6 +10,7 @@ from torch import nn
 from sklearn import preprocessing
 
 
+"""
 # This function generates one_hot_encoding from input sequences
 # The shape of output is (Batch, Length, Dimension)
 def one_hot_encoding(inputs: list | np.ndarray, token: list, is_pad: bool = False, max_length: int = None) -> (
@@ -48,6 +49,7 @@ def get_length(inputs: list | np.ndarray) -> list:
         lengths.append(length)
 
     return lengths
+"""
 
 
 # Obtain k-mer for a given sequence

@@ -4,6 +4,7 @@ import torch
 from torch import nn
 
 
+# TODO: Replace LSTM structure with
 class TFModel(nn.Module):
     def __init__(self, embed_feature: int, hidden_feature: int, num_lstm_layer: int = 2, num_attn_head: int = 8,
                  tf_dim_forward: int = 256, num_tf_layer: int = 2, conv_kernel_size: int = 3, name: str = "TFModel"
