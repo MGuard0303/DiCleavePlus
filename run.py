@@ -1,6 +1,7 @@
 import datetime
 import math
 import pickle
+from pathlib import Path
 
 import pandas as pd
 import torch
@@ -99,6 +100,16 @@ for fold in range(5):
     dl_trn = DataLoader(ds_trn, batch_size=256, shuffle=True)
     dl_vld = DataLoader(ds_vld, batch_size=256, shuffle=True)
     dl_eval = DataLoader(ds_eval, batch_size=256, shuffle=False)
+
+    # Save evaluation data for each fold.
+    timestamp = datetime.datetime.now().strftime("%H%M%S")
+    path = Path(f"expt/{date}")
+
+    if not path.exists():
+        path.mkdir(parents=True)
+
+    with open(f"{path}/dl_eval_{timestamp}.pkl", "wb") as f:
+        pickle.dump(dl_eval, f)
 
     # Initial model
     model = dmodel.TFModel(embed_feature=32, hidden_feature=64)
