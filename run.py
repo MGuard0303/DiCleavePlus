@@ -37,7 +37,7 @@ embedding_layer_sec = (dmodel.EmbeddingLayer(hidden_feature=embed_feature, softm
 union_fusion_seq = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, embed_feature), pool_type="2d").to(device)
 union_fusion_patt = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, embed_feature), pool_type="2d").to(device)
 
-for fold in range(5):
+for fold in range(1, 6):
     # Get training data and evaluation data
     seq_trn_1, seq_eval_1 = utils.separate_tensor(inputs=pp["seq_1"], curr_fold=fold, total_fold=5, fold_size=fold_size)
     seq_trn_2, seq_eval_2 = utils.separate_tensor(inputs=pp["seq_2"], curr_fold=fold, total_fold=5, fold_size=fold_size)
@@ -132,7 +132,7 @@ for fold in range(5):
         print(f"Catch error {e}")
 
     # Evaluation setup.
-    for idx, mdl in enumerate(model_queue.queue):
+    for idx, mdl in enumerate(model_queue.queue, start=1):
         timestamp = datetime.datetime.now().strftime("%H%M%S")
         mdl.name = f"model{idx}_fold{fold}_{timestamp}"
         utils.save_parameter(model=mdl, path=f"expt/{date}", filename=f"{mdl.name}.pt")
