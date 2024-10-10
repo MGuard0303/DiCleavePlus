@@ -27,12 +27,12 @@ fold_size, _ = divmod(len(df), 5)
 with open("dataset/rnafold/dataset_b/pre_processed.pickle", "rb") as f:
     pp = pickle.load(f)
 
-embed_feature = 32
+embed_feature = 16
 
-seq_embedding = (dmodel.EmbeddingLayer(hidden_feature=embed_feature, softmax_dim=1, is_secondary_structure=False).
-                 to(device))
-sec_embedding = (dmodel.EmbeddingLayer(hidden_feature=embed_feature, softmax_dim=1, is_secondary_structure=True).
-                 to(device))
+embedding_layer_seq = (dmodel.EmbeddingLayer(hidden_feature=embed_feature, softmax_dim=1, is_secondary_structure=False).
+                       to(device))
+embedding_layer_sec = (dmodel.EmbeddingLayer(hidden_feature=embed_feature, softmax_dim=1, is_secondary_structure=True).
+                       to(device))
 
 union_fusion_seq = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, embed_feature), pool_type="2d").to(device)
 union_fusion_patt = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, embed_feature), pool_type="2d").to(device)
@@ -63,14 +63,14 @@ for fold in range(5):
 
     lbl_trn, lbl_eval = utils.separate_tensor(inputs=pp["label"], curr_fold=fold, total_fold=5, fold_size=fold_size)
 
-    seq_trn = seq_embedding(seq_trn_1, seq_trn_2, seq_trn_3)
-    seq_eval = seq_embedding(seq_eval_1, seq_eval_2, seq_eval_3)
-    db_trn = sec_embedding(db_trn_1, db_trn_2, db_trn_3)
-    db_eval = sec_embedding(db_eval_1, db_eval_2, db_eval_3)
-    patt_trn = seq_embedding(patt_trn_1, patt_trn_2, patt_trn_3)
-    patt_eval = seq_embedding(patt_eval_1, patt_eval_2, patt_eval_3)
-    patt_db_trn = sec_embedding(patt_db_trn_1, patt_db_trn_2, patt_db_trn_3)
-    patt_db_eval = sec_embedding(patt_db_eval_1, patt_db_eval_2, patt_db_eval_3)
+    seq_trn = embedding_layer_seq(seq_trn_1, seq_trn_2, seq_trn_3)
+    seq_eval = embedding_layer_seq(seq_eval_1, seq_eval_2, seq_eval_3)
+    db_trn = embedding_layer_sec(db_trn_1, db_trn_2, db_trn_3)
+    db_eval = embedding_layer_sec(db_eval_1, db_eval_2, db_eval_3)
+    patt_trn = embedding_layer_seq(patt_trn_1, patt_trn_2, patt_trn_3)
+    patt_eval = embedding_layer_seq(patt_eval_1, patt_eval_2, patt_eval_3)
+    patt_db_trn = embedding_layer_sec(patt_db_trn_1, patt_db_trn_2, patt_db_trn_3)
+    patt_db_eval = embedding_layer_sec(patt_db_eval_1, patt_db_eval_2, patt_db_eval_3)
 
     sequence_trn, _ = union_fusion_seq(seq_trn, db_trn)
     sequence_eval, _ = union_fusion_seq(seq_eval, db_eval)
@@ -112,7 +112,7 @@ for fold in range(5):
         pickle.dump(dl_eval, f)
 
     # Initial model
-    model = dmodel.TFModel(embed_feature=32, linear_hidden_feature=64)
+    model = dmodel.TFModel(embed_feature=embed_feature, linear_hidden_feature=16)
     model.loss_function = torch.nn.NLLLoss()
     model.optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     model.to(device)
