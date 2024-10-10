@@ -4,40 +4,79 @@ import torch
 from torch import nn
 
 
-# TODO: Replace LSTM structure with Transformer structure.
 class TFModel(nn.Module):
-    def __init__(self, embed_feature: int, hidden_feature: int, num_lstm_layer: int = 2, num_attn_head: int = 8,
-                 tf_dim_forward: int = 256, num_tf_layer: int = 2, conv_kernel_size: int = 3, name: str = "TFModel"
-                 ):
+    def __init__(self, embed_feature: int, linear_hidden_feature: int, conv_out_channel: int = None,
+                 num_attn_head: int = 8, tf_dim_forward: int = 256, num_tf_layer: int = 2, conv_kernel_size: int = 3,
+                 name: str = "TFModel"):
         super().__init__()
         self.name = name
 
+        """
         # Layers for LSTM structure
         self.lstm = nn.LSTM(input_size=embed_feature, hidden_size=embed_feature, num_layers=num_lstm_layer,
                             batch_first=True)
         self.ln = nn.LayerNorm(normalized_shape=embed_feature)
+        """
 
-        # Layers for Transformer structure
-        self.encoder = nn.TransformerEncoderLayer(d_model=embed_feature, nhead=num_attn_head,
-                                                  dim_feedforward=tf_dim_forward, batch_first=True)
-        self.encoder_container = nn.TransformerEncoder(encoder_layer=self.encoder, num_layers=num_tf_layer,
-                                                       enable_nested_tensor=False)
-        self.position_encoder = PositionEncoder(d_model=embed_feature, length=200, batch_first=True)
-        self.conv = nn.Sequential(
-            nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=conv_kernel_size, padding=1),
-            nn.BatchNorm1d(num_features=embed_feature),
-            nn.LeakyReLU()
-        )
+        # Calculate padding number for different kernel size.
+        padding = int((conv_kernel_size - 1) / 2)
+
+        # Layers for pattern Transformer structure.
+        self.encoder_pattern = nn.TransformerEncoderLayer(d_model=embed_feature, nhead=num_attn_head,
+                                                          dim_feedforward=tf_dim_forward, batch_first=True)
+        self.encoder_container_pattern = nn.TransformerEncoder(encoder_layer=self.encoder_pattern,
+                                                               num_layers=num_tf_layer, enable_nested_tensor=False)
+        self.position_encoder_pattern = PositionEncoder(d_model=embed_feature, length=14, batch_first=True)
+        if conv_out_channel is None:
+            self.conv_pattern = nn.Sequential(
+                nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=conv_kernel_size,
+                          padding=padding),
+                nn.BatchNorm1d(num_features=embed_feature),
+                nn.LeakyReLU()
+            )
+        else:
+            self.conv_pattern = nn.Sequential(
+                nn.Conv1d(in_channels=embed_feature, out_channels=conv_out_channel, kernel_size=conv_kernel_size,
+                          padding=padding),
+                nn.BatchNorm1d(num_features=conv_out_channel),
+                nn.LeakyReLU()
+            )
+
+        # Layers for sequence Transformer structure
+        self.encoder_sequence = nn.TransformerEncoderLayer(d_model=embed_feature, nhead=num_attn_head,
+                                                           dim_feedforward=tf_dim_forward, batch_first=True)
+        self.encoder_container_sequence = nn.TransformerEncoder(encoder_layer=self.encoder_sequence,
+                                                                num_layers=num_tf_layer, enable_nested_tensor=False)
+        self.position_encoder_sequence = PositionEncoder(d_model=embed_feature, length=200, batch_first=True)
+        if conv_out_channel is None:
+            self.conv_sequence = nn.Sequential(
+                nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=conv_kernel_size,
+                          padding=padding),
+                nn.BatchNorm1d(num_features=embed_feature),
+                nn.LeakyReLU()
+            )
+        else:
+            self.conv_sequence = nn.Sequential(
+                nn.Conv1d(in_channels=embed_feature, out_channels=conv_out_channel, kernel_size=conv_kernel_size,
+                          padding=padding),
+                nn.BatchNorm1d(num_features=conv_out_channel),
+                nn.LeakyReLU()
+            )
 
         self.identity = nn.Sequential()  # Resnet short-cut for convolution structure
-        self.pattern_linear = nn.Linear(in_features=14 * embed_feature, out_features=hidden_feature)
-        self.sequence_linear = nn.Linear(in_features=200 * embed_feature, out_features=hidden_feature)
 
-        self.union_fusion = AttentionalFeatureFusionLayer(glo_pool_size=hidden_feature, pool_type="1d")
+        if conv_out_channel is None:
+            self.linear_pattern = nn.Linear(in_features=14 * embed_feature, out_features=linear_hidden_feature)
+            self.linear_sequence = nn.Linear(in_features=200 * embed_feature, out_features=linear_hidden_feature)
+        else:
+            self.linear_pattern = nn.Linear(in_features=14 * conv_out_channel, out_features=linear_hidden_feature)
+            self.linear_sequence = nn.Linear(in_features=200 * conv_out_channel, out_features=linear_hidden_feature)
+
+        self.union_fusion = AttentionalFeatureFusionLayer(glo_pool_size=linear_hidden_feature, pool_type="1d")
 
         self.flatten = nn.Flatten()
         self.fc = nn.Sequential(
-            nn.Linear(in_features=hidden_feature, out_features=512),
+            nn.Linear(in_features=linear_hidden_feature, out_features=512),
             nn.LeakyReLU(),
             nn.Dropout(),
             nn.Linear(in_features=512, out_features=128),
@@ -54,6 +93,7 @@ class TFModel(nn.Module):
 
     # Shape of inputs is (Batch, Length, Dimension)
     def forward(self, sequence: torch.Tensor, pattern: torch.Tensor) -> torch.Tensor:
+        """
         self.lstm.flatten_parameters()
         pattern_identity = self.identity(pattern)
         pattern_identity = self.ln(pattern_identity)
@@ -63,17 +103,31 @@ class TFModel(nn.Module):
         pattern += pattern_identity
         pattern = self.flatten(pattern)
         pattern = self.pattern_linear(pattern)
+        """
 
+        # Forward process of pattern feature.
+        pattern_identity = self.identity(pattern)
+
+        pattern = self.position_encoder_pattern(pattern)  # Output size: (B, L, D)
+        pattern = self.encoder_container_pattern(pattern)  # Output size: (B, L, D)
+        pattern = torch.permute(input=pattern, dims=(0, 2, 1))
+        pattern = self.conv_pattern(pattern)  # Output size: (B, D, L)
+        pattern = torch.permute(input=pattern, dims=(0, 2, 1))
+        pattern += pattern_identity  # Output size: (B, L, D)
+        pattern = self.flatten(pattern)
+        pattern = self.linear_pattern(pattern)
+
+        # Forward process of sequence feature.
         sequence_identity = self.identity(sequence)
 
-        sequence = self.position_encoder(sequence)  # Output size: (B, L, D)
-        sequence = self.encoder_container(sequence)  # Output size: (B, L, D)
+        sequence = self.position_encoder_sequence(sequence)  # Output size: (B, L, D)
+        sequence = self.encoder_container_sequence(sequence)  # Output size: (B, L, D)
         sequence = torch.permute(input=sequence, dims=(0, 2, 1))
-        sequence = self.conv(sequence)  # Output size: (B, D, L)
+        sequence = self.conv_sequence(sequence)  # Output size: (B, D, L)
         sequence = torch.permute(input=sequence, dims=(0, 2, 1))
         sequence += sequence_identity  # Output size: (B, L, D)
         sequence = self.flatten(sequence)
-        sequence = self.sequence_linear(sequence)
+        sequence = self.linear_sequence(sequence)
 
         embed, _ = self.union_fusion(pattern, sequence)
         embed = self.flatten(embed)

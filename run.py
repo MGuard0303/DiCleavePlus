@@ -112,7 +112,7 @@ for fold in range(5):
         pickle.dump(dl_eval, f)
 
     # Initial model
-    model = dmodel.TFModel(embed_feature=32, hidden_feature=64)
+    model = dmodel.TFModel(embed_feature=32, linear_hidden_feature=64)
     model.loss_function = torch.nn.NLLLoss()
     model.optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     model.to(device)
