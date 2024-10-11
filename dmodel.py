@@ -188,8 +188,8 @@ class TFModelMini(nn.Module):
 
         self.flatten = nn.Flatten()
         self.fc = nn.Sequential(
-            nn.BatchNorm1d(num_features=linear_hidden_feature),
-            nn.Linear(in_features=linear_hidden_feature, out_features=1024),
+            nn.BatchNorm1d(num_features=2 * linear_hidden_feature),
+            nn.Linear(in_features=2 * linear_hidden_feature, out_features=1024),
             nn.LeakyReLU(),
             nn.Dropout(),
             nn.Linear(in_features=1024, out_features=256),
@@ -233,7 +233,7 @@ class TFModelMini(nn.Module):
         sequence = self.flatten(sequence)
         sequence = self.linear_sequence(sequence)
 
-        embed = torch.cat((pattern, sequence), dim=0)
+        embed = torch.cat((pattern, sequence), dim=1)
         embed = self.flatten(embed)
         embed = self.fc(embed)
         embed = self.output_layer(embed)
