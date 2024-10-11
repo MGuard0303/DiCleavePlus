@@ -6,11 +6,10 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 import metrics
-import dmodel
 import utils
 
 
-def train_process(model: dmodel.TFModel, sequence: torch.Tensor, pattern: torch.Tensor, label: torch.Tensor) -> tuple:
+def train_process(model: torch.nn.Module, sequence: torch.Tensor, pattern: torch.Tensor, label: torch.Tensor) -> tuple:
     # Set to the training mode, dropout and batch normalization will work under this mode.
     model.train()
     model.optimizer.zero_grad()  # Clear the gradient everytime
@@ -27,7 +26,7 @@ def train_process(model: dmodel.TFModel, sequence: torch.Tensor, pattern: torch.
 
 
 @torch.no_grad()  # This decorator makes following function not calculate gradient
-def valid_process(model: dmodel.TFModel, sequence: torch.Tensor, pattern: torch.Tensor, label: torch.Tensor) -> tuple:
+def valid_process(model: torch.nn.Module, sequence: torch.Tensor, pattern: torch.Tensor, label: torch.Tensor) -> tuple:
     # Set to the evaluation mode, dropout and batch normalization will not work
     model.eval()
 
@@ -37,8 +36,8 @@ def valid_process(model: dmodel.TFModel, sequence: torch.Tensor, pattern: torch.
     return loss.item(), pred
 
 
-def train(model: dmodel.TFModel, train_loader: DataLoader, valid_loader: DataLoader, epochs: int, valid_per_epochs: int,
-          returns: bool = False) -> tuple:
+def train(model: torch.nn.Module, train_loader: DataLoader, valid_loader: DataLoader, epochs: int,
+          valid_per_epochs: int, returns: bool = False) -> tuple:
     print(f"Model {model.name}: Start training...")
 
     tolerance = 3
@@ -101,7 +100,7 @@ def train(model: dmodel.TFModel, train_loader: DataLoader, valid_loader: DataLoa
 
 
 @torch.no_grad()
-def evaluate(model: dmodel.TFModel, eval_loader: DataLoader, returns: bool = False) -> tuple:
+def evaluate(model: torch.nn.Module, eval_loader: DataLoader, returns: bool = False) -> tuple:
     model.eval()
 
     eval_loss = 0.0
@@ -143,7 +142,7 @@ def evaluate(model: dmodel.TFModel, eval_loader: DataLoader, returns: bool = Fal
     print(f"Evaluate {model.name}")
     print(f"| Average Evaluation Loss: {avg_eval_loss:.3f} |")
     print(f"| PMF-Ext: {pmf_ext:.3f} | PSE-Ext: {pse_ext:.3f} |")
-    print(f"| PMF: {pmf:.3f} | PSE: {pse}:.3f |")
+    print(f"| PMF: {pmf:.3f} | PSE: {pse:.3f} |")
     print(f"| Top-k Accuracy: {topk_acc:.3f} |")
     print(f"PN Binary Performance")
     print(f"| Accuracy: {binary_acc:.3f} | Specificity: {binary_spe:.3f} | Sensitivity: {binary_sen:.3f} | "

@@ -27,20 +27,20 @@ fold_size, _ = divmod(len(df), 5)
 with open("dataset/rnafold/dataset_b/pre_processed.pickle", "rb") as f:
     pp = pickle.load(f)
 
-embed_feature = 64
+embed_feature = 32
 
 """
-embedding_layer_seq = (dmodel.EmbeddingLayer(embed_dim=embed_feature, softmax_dim=1, is_secondary_structure=False).
-                       to(device))
-embedding_layer_sec = (dmodel.EmbeddingLayer(embed_dim=embed_feature, softmax_dim=1, is_secondary_structure=True).
-                       to(device))
+embedding_layer_seq = dmodel.EmbeddingLayer(embed_dim=embed_feature, softmax_dim=1, is_secondary_structure=False,
+                                            is_simple=True).to(device)
+embedding_layer_sec = dmodel.EmbeddingLayer(embed_dim=embed_feature, softmax_dim=1, is_secondary_structure=True,
+                                            is_simple=True).to(device)
 """
 
 embedding_layer_seq = torch.nn.Embedding(num_embeddings=85, embedding_dim=embed_feature, padding_idx=0)
 embedding_layer_sec = torch.nn.Embedding(num_embeddings=40, embedding_dim=embed_feature, padding_idx=0)
 
-union_fusion_seq = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, embed_feature), pool_type="2d").to(device)
-union_fusion_patt = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, embed_feature), pool_type="2d").to(device)
+# union_fusion_seq = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, embed_feature), pool_type="2d").to(device)
+# union_fusion_patt = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, embed_feature), pool_type="2d").to(device)
 
 for fold in range(1, 6):
     # Get training data and evaluation data
@@ -75,17 +75,6 @@ for fold in range(1, 6):
                                                       fold_size=fold_size)
     lbl_trn, lbl_eval = utils.separate_tensor(inputs=pp["label"], curr_fold=fold, total_fold=5, fold_size=fold_size)
 
-    """
-    seq_trn = embedding_layer_seq(seq_trn_1, seq_trn_2, seq_trn_3)
-    seq_eval = embedding_layer_seq(seq_eval_1, seq_eval_2, seq_eval_3)
-    db_trn = embedding_layer_sec(db_trn_1, db_trn_2, db_trn_3)
-    db_eval = embedding_layer_sec(db_eval_1, db_eval_2, db_eval_3)
-    patt_trn = embedding_layer_seq(patt_trn_1, patt_trn_2, patt_trn_3)
-    patt_eval = embedding_layer_seq(patt_eval_1, patt_eval_2, patt_eval_3)
-    patt_db_trn = embedding_layer_sec(patt_db_trn_1, patt_db_trn_2, patt_db_trn_3)
-    patt_db_eval = embedding_layer_sec(patt_db_eval_1, patt_db_eval_2, patt_db_eval_3)
-    """
-
     seq_trn = embedding_layer_seq(seq_trn)
     seq_eval = embedding_layer_seq(seq_eval)
     db_trn = embedding_layer_sec(db_trn)
@@ -95,10 +84,10 @@ for fold in range(1, 6):
     patt_db_trn = embedding_layer_sec(patt_db_trn)
     patt_db_eval = embedding_layer_sec(patt_db_eval)
 
-    sequence_trn, _ = union_fusion_seq(seq_trn, db_trn)
-    sequence_eval, _ = union_fusion_seq(seq_eval, db_eval)
-    pattern_trn, _ = union_fusion_patt(patt_trn, patt_db_trn)
-    pattern_eval, _ = union_fusion_patt(patt_eval, patt_db_eval)
+    sequence_trn = torch.cat((seq_trn, db_trn), dim=2)
+    sequence_eval = torch.cat((seq_eval, db_eval), dim=2)
+    pattern_trn = torch.cat((patt_trn, patt_db_trn), dim=2)
+    pattern_eval = torch.cat((patt_eval, patt_db_eval), dim=2)
 
     # Get validation data from training data
     ori_trn_size = len(seq_trn)
@@ -136,7 +125,7 @@ for fold in range(1, 6):
         pickle.dump(dl_eval, f)
 
     # Initial model
-    model = dmodel.TFModel(embed_feature=embed_feature)
+    model = dmodel.TFModelMini(embed_feature=embed_feature)
     model.loss_function = torch.nn.NLLLoss()
     model.optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
     model.to(device)
