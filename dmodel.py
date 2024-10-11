@@ -5,9 +5,9 @@ from torch import nn
 
 
 class TFModel(nn.Module):
-    def __init__(self, embed_feature: int, linear_hidden_feature: int, conv_out_channel: int = None,
-                 num_attn_head: int = 8, tf_dim_forward: int = 256, num_tf_layer: int = 2, conv_kernel_size: int = 3,
-                 name: str = "TFModel"):
+    def __init__(self, embed_feature: int, linear_hidden_feature: int = 256, num_attn_head: int = 8,
+                 tf_dim_forward: int = 512, num_tf_layer: int = 6, seq_conv_kernel_size: int = 5,
+                 patt_conv_kernel_size: int = 3, name: str = "TFModel"):
         super().__init__()
         self.name = name
 
@@ -19,7 +19,8 @@ class TFModel(nn.Module):
         """
 
         # Calculate padding number for different kernel size.
-        padding = int((conv_kernel_size - 1) / 2)
+        seq_padding = int((seq_conv_kernel_size - 1) / 2)
+        patt_padding = int((patt_conv_kernel_size - 1) / 2)
 
         # Layers for pattern Transformer structure.
         self.encoder_pattern = nn.TransformerEncoderLayer(d_model=embed_feature, nhead=num_attn_head,
@@ -27,20 +28,20 @@ class TFModel(nn.Module):
         self.encoder_container_pattern = nn.TransformerEncoder(encoder_layer=self.encoder_pattern,
                                                                num_layers=num_tf_layer, enable_nested_tensor=False)
         self.position_encoder_pattern = PositionEncoder(d_model=embed_feature, length=14, batch_first=True)
-        if conv_out_channel is None:
-            self.conv_pattern = nn.Sequential(
-                nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=conv_kernel_size,
-                          padding=padding),
-                nn.BatchNorm1d(num_features=embed_feature),
-                nn.LeakyReLU()
-            )
-        else:
-            self.conv_pattern = nn.Sequential(
-                nn.Conv1d(in_channels=embed_feature, out_channels=conv_out_channel, kernel_size=conv_kernel_size,
-                          padding=padding),
-                nn.BatchNorm1d(num_features=conv_out_channel),
-                nn.LeakyReLU()
-            )
+        self.conv_pattern = nn.Sequential(
+            nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=patt_conv_kernel_size,
+                      padding=patt_padding),
+            nn.BatchNorm1d(num_features=embed_feature),
+            nn.LeakyReLU(),
+            nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=patt_conv_kernel_size,
+                      padding=patt_padding),
+            nn.BatchNorm1d(num_features=embed_feature),
+            nn.LeakyReLU(),
+            nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=patt_conv_kernel_size,
+                      padding=patt_padding),
+            nn.BatchNorm1d(num_features=embed_feature),
+            nn.LeakyReLU()
+        )
 
         # Layers for sequence Transformer structure
         self.encoder_sequence = nn.TransformerEncoderLayer(d_model=embed_feature, nhead=num_attn_head,
@@ -48,42 +49,49 @@ class TFModel(nn.Module):
         self.encoder_container_sequence = nn.TransformerEncoder(encoder_layer=self.encoder_sequence,
                                                                 num_layers=num_tf_layer, enable_nested_tensor=False)
         self.position_encoder_sequence = PositionEncoder(d_model=embed_feature, length=200, batch_first=True)
-        if conv_out_channel is None:
-            self.conv_sequence = nn.Sequential(
-                nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=conv_kernel_size,
-                          padding=padding),
-                nn.BatchNorm1d(num_features=embed_feature),
-                nn.LeakyReLU()
-            )
-        else:
-            self.conv_sequence = nn.Sequential(
-                nn.Conv1d(in_channels=embed_feature, out_channels=conv_out_channel, kernel_size=conv_kernel_size,
-                          padding=padding),
-                nn.BatchNorm1d(num_features=conv_out_channel),
-                nn.LeakyReLU()
-            )
+        self.conv_sequence = nn.Sequential(
+            nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=seq_conv_kernel_size,
+                      padding=seq_padding),
+            nn.BatchNorm1d(num_features=embed_feature),
+            nn.LeakyReLU(),
+            nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=seq_conv_kernel_size,
+                      padding=seq_padding),
+            nn.BatchNorm1d(num_features=embed_feature),
+            nn.LeakyReLU(),
+            nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=seq_conv_kernel_size,
+                      padding=seq_padding),
+            nn.BatchNorm1d(num_features=embed_feature),
+            nn.LeakyReLU()
+        )
 
         self.identity = nn.Sequential()  # Resnet short-cut for convolution structure
 
-        if conv_out_channel is None:
-            self.linear_pattern = nn.Linear(in_features=14 * embed_feature, out_features=linear_hidden_feature)
-            self.linear_sequence = nn.Linear(in_features=200 * embed_feature, out_features=linear_hidden_feature)
-        else:
-            self.linear_pattern = nn.Linear(in_features=14 * conv_out_channel, out_features=linear_hidden_feature)
-            self.linear_sequence = nn.Linear(in_features=200 * conv_out_channel, out_features=linear_hidden_feature)
+        self.linear_pattern = nn.Sequential(
+            nn.Linear(in_features=14 * embed_feature, out_features=linear_hidden_feature),
+            nn.LeakyReLU(),
+            nn.Dropout()
+        )
+        self.linear_sequence = nn.Sequential(
+            nn.Linear(in_features=200 * embed_feature, out_features=linear_hidden_feature),
+            nn.LeakyReLU(),
+            nn.Dropout()
+        )
 
         self.union_fusion = AttentionalFeatureFusionLayer(glo_pool_size=linear_hidden_feature, pool_type="1d")
 
         self.flatten = nn.Flatten()
         self.fc = nn.Sequential(
-            nn.Linear(in_features=linear_hidden_feature, out_features=512),
+            nn.Linear(in_features=linear_hidden_feature, out_features=2048),
+            nn.LeakyReLU(),
+            nn.Dropout(),
+            nn.Linear(in_features=2048, out_features=512),
             nn.LeakyReLU(),
             nn.Dropout(),
             nn.Linear(in_features=512, out_features=128),
             nn.LeakyReLU(),
             nn.Dropout(),
             nn.Linear(in_features=128, out_features=32),
-            nn.LeakyReLU()
+            nn.LeakyReLU(),
         )
 
         self.output_layer = nn.Sequential(

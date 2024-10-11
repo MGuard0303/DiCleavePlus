@@ -27,7 +27,7 @@ fold_size, _ = divmod(len(df), 5)
 with open("dataset/rnafold/dataset_b/pre_processed.pickle", "rb") as f:
     pp = pickle.load(f)
 
-embed_feature = 16
+embed_feature = 128
 
 embedding_layer_seq = (dmodel.EmbeddingLayer(hidden_feature=embed_feature, softmax_dim=1, is_secondary_structure=False).
                        to(device))
@@ -112,9 +112,9 @@ for fold in range(1, 6):
         pickle.dump(dl_eval, f)
 
     # Initial model
-    model = dmodel.TFModel(embed_feature=embed_feature, linear_hidden_feature=16)
+    model = dmodel.TFModel(embed_feature=embed_feature)
     model.loss_function = torch.nn.NLLLoss()
-    model.optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    model.optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
     model.to(device)
 
     # Training setup.

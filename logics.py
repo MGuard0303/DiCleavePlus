@@ -132,6 +132,8 @@ def evaluate(model: dmodel.TFModel, eval_loader: DataLoader, returns: bool = Fal
     eval_pred = torch.tensor(eval_pred_ls)
     eval_lbl = torch.tensor(eval_lbl_ls)
 
+    pmf_ext = metrics.pmf_ext(eval_pred, eval_lbl)
+    pse_ext = metrics.pse_ext(eval_pred, eval_lbl)
     pmf = metrics.pmf(eval_pred, eval_lbl)
     pse = metrics.pse(eval_pred, eval_lbl)
     topk_acc = metrics.topk_acc(eval_pred, eval_lbl, k=3)
@@ -140,7 +142,8 @@ def evaluate(model: dmodel.TFModel, eval_loader: DataLoader, returns: bool = Fal
     # Print evaluation result
     print(f"Evaluate {model.name}")
     print(f"| Average Evaluation Loss: {avg_eval_loss:.3f} |")
-    print(f"| PMF: {pmf:.3f} | PSE: {pse:.3f} |")
+    print(f"| PMF-Ext: {pmf_ext:.3f} | PSE-Ext: {pse_ext:.3f} |")
+    print(f"| PMF: {pmf:.3f} | PSE: {pse}:.3f |")
     print(f"| Top-k Accuracy: {topk_acc:.3f} |")
     print(f"PN Binary Performance")
     print(f"| Accuracy: {binary_acc:.3f} | Specificity: {binary_spe:.3f} | Sensitivity: {binary_sen:.3f} | "
