@@ -51,7 +51,8 @@ def train(model: torch.nn.Module, train_loader: DataLoader, valid_loader: DataLo
         # Training step
         trn_steps = len(train_loader)
 
-        for _, (seq, patt, lbl) in enumerate(tqdm(train_loader)):
+        # for _, (seq, patt, lbl) in enumerate(tqdm(train_loader)):  # For user
+        for _, (seq, patt, lbl) in enumerate(train_loader):
             lbl = lbl.squeeze(1)  # The shape of NLLLoss label is (N)
             lbl = lbl.type(torch.long)
             batch_loss, _ = train_process(model=model, sequence=seq, pattern=patt, label=lbl)
@@ -68,7 +69,8 @@ def train(model: torch.nn.Module, train_loader: DataLoader, valid_loader: DataLo
 
             vld_steps = len(valid_loader)
 
-            for _, (seq, patt, lbl) in enumerate(tqdm(valid_loader)):
+            # for _, (seq, patt, lbl) in enumerate(tqdm(valid_loader)):  # For user
+            for _, (seq, patt, lbl) in enumerate(valid_loader):
                 lbl = lbl.squeeze(1)  # The shape of NLLLoss label is (N)
                 lbl = lbl.type(torch.long)
                 batch_vld_loss, _ = valid_process(model=model, sequence=seq, pattern=patt, label=lbl)
@@ -110,7 +112,8 @@ def evaluate(model: torch.nn.Module, eval_loader: DataLoader, returns: bool = Fa
 
     eval_steps = len(eval_loader)
 
-    for _, (seq, patt, lbl) in enumerate(tqdm(eval_loader)):
+    # for _, (seq, patt, lbl) in enumerate(tqdm(eval_loader)):  # For user
+    for _, (seq, patt, lbl) in enumerate(eval_loader):
         lbl = lbl.squeeze(1)  # The shape of NLLLoss label is (N)
         lbl = lbl.type(torch.long)
 
