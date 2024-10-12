@@ -90,7 +90,7 @@ for fold in range(1, 6):
     pattern_eval = torch.cat((patt_eval, patt_db_eval), dim=2)
 
     # Get validation data from training data
-    ori_trn_size = len(seq_trn)
+    ori_trn_size = len(sequence_trn)
     vld_size = math.floor(ori_trn_size * 0.1)
     idx_perm = torch.randperm(ori_trn_size)
     idx_vld = idx_perm[:vld_size]
@@ -116,7 +116,7 @@ for fold in range(1, 6):
 
     # Save evaluation data for each fold.
     timestamp = datetime.datetime.now().strftime("%H%M%S")
-    path = Path(f"expt/{date}")
+    path = Path(f"expt/{date}/mini")
 
     if not path.exists():
         path.mkdir(parents=True)
@@ -125,17 +125,19 @@ for fold in range(1, 6):
         pickle.dump(dl_eval, f)
 
     # Initial model
-    model = dmodel.TFModelMini(embed_feature=2 * embed_feature)
+    model = dmodel.TFModelMini(embed_feature=2 * embed_feature, linear_hidden_feature=64, num_attn_head=8,
+                               tf_dim_forward=128, num_tf_layer=3)
     model.loss_function = torch.nn.NLLLoss()
     model.optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
     model.to(device)
 
     # Training setup.
-    epoch = 50
+    epoch = 70
     print(f"fold_{fold}")
     model_queue, model_fnl = logics.train(model=model, train_loader=dl_trn, valid_loader=dl_vld, epochs=epoch,
                                           valid_per_epochs=5, returns=True)
 
+    """
     # Delete files if necessary.
     try:
         utils.delete_files()
@@ -143,6 +145,7 @@ for fold in range(1, 6):
         print(f"Catch error {e}")
     except IsADirectoryError as e:
         print(f"Catch error {e}")
+    """
 
     # Evaluation setup.
     for idx, mdl in enumerate(model_queue.queue, start=1):

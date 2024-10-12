@@ -5,7 +5,7 @@ from torch import nn
 
 
 class TFModel(nn.Module):
-    def __init__(self, embed_feature: int, linear_hidden_feature: int = 256, num_attn_head: int = 8,
+    def __init__(self, embed_feature: int, linear_hidden_feature: int = 128, num_attn_head: int = 8,
                  tf_dim_forward: int = 512, num_tf_layer: int = 6, seq_conv_kernel_size: int = 5,
                  patt_conv_kernel_size: int = 3, name: str = "TFModel"):
         super().__init__()
@@ -129,15 +129,10 @@ class TFModel(nn.Module):
 
 # Use concatenation instead of advanced feature fusion.
 class TFModelMini(nn.Module):
-    def __init__(self, embed_feature: int, linear_hidden_feature: int = 256, num_attn_head: int = 8,
-                 tf_dim_forward: int = 512, num_tf_layer: int = 6, seq_conv_kernel_size: int = 5,
-                 patt_conv_kernel_size: int = 3, name: str = "TFModel-mini"):
+    def __init__(self, embed_feature: int, linear_hidden_feature: int = 64, num_attn_head: int = 8,
+                 tf_dim_forward: int = 128, num_tf_layer: int = 3, name: str = "TFModel-mini"):
         super().__init__()
         self.name = name
-
-        # Calculate padding number for different kernel size.
-        seq_padding = int((seq_conv_kernel_size - 1) / 2)
-        patt_padding = int((patt_conv_kernel_size - 1) / 2)
 
         # Layers for pattern Transformer structure.
         self.encoder_pattern = nn.TransformerEncoderLayer(d_model=embed_feature, nhead=num_attn_head,
@@ -146,12 +141,10 @@ class TFModelMini(nn.Module):
                                                                num_layers=num_tf_layer, enable_nested_tensor=False)
         self.position_encoder_pattern = PositionEncoder(d_model=embed_feature, length=14, batch_first=True)
         self.conv_pattern = nn.Sequential(
-            nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=patt_conv_kernel_size,
-                      padding=patt_padding),
+            nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=3, padding=1),
             nn.BatchNorm1d(num_features=embed_feature),
             nn.LeakyReLU(),
-            nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=patt_conv_kernel_size,
-                      padding=patt_padding),
+            nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=3, padding=1),
             nn.BatchNorm1d(num_features=embed_feature),
             nn.LeakyReLU()
         )
@@ -163,12 +156,10 @@ class TFModelMini(nn.Module):
                                                                 num_layers=num_tf_layer, enable_nested_tensor=False)
         self.position_encoder_sequence = PositionEncoder(d_model=embed_feature, length=200, batch_first=True)
         self.conv_sequence = nn.Sequential(
-            nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=seq_conv_kernel_size,
-                      padding=seq_padding),
+            nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=5, padding=2),
             nn.BatchNorm1d(num_features=embed_feature),
             nn.LeakyReLU(),
-            nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=seq_conv_kernel_size,
-                      padding=seq_padding),
+            nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=5, padding=2),
             nn.BatchNorm1d(num_features=embed_feature),
             nn.LeakyReLU()
         )

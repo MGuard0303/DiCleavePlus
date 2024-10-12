@@ -27,7 +27,7 @@ fold_size, _ = divmod(len(df), 5)
 with open("dataset/rnafold/dataset_b/pre_processed.pickle", "rb") as f:
     pp = pickle.load(f)
 
-embed_feature = 64
+embed_feature = 32
 
 """
 embedding_layer_seq = (dmodel.EmbeddingLayer(embed_dim=embed_feature, softmax_dim=1, is_secondary_structure=False).
@@ -42,7 +42,8 @@ embedding_layer_sec = torch.nn.Embedding(num_embeddings=40, embedding_dim=embed_
 union_fusion_seq = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, embed_feature), pool_type="2d").to(device)
 union_fusion_patt = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, embed_feature), pool_type="2d").to(device)
 
-for fold in range(1, 6):
+# for fold in range(1, 6):
+for fold in range(1, 2):
     # Get training data and evaluation data
     """
     seq_trn_1, seq_eval_1 = utils.separate_tensor(inputs=pp["seq_1"], curr_fold=fold, total_fold=5, fold_size=fold_size)
@@ -101,7 +102,7 @@ for fold in range(1, 6):
     pattern_eval, _ = union_fusion_patt(patt_eval, patt_db_eval)
 
     # Get validation data from training data
-    ori_trn_size = len(seq_trn)
+    ori_trn_size = len(sequence_trn)
     vld_size = math.floor(ori_trn_size * 0.1)
     idx_perm = torch.randperm(ori_trn_size)
     idx_vld = idx_perm[:vld_size]
@@ -127,7 +128,7 @@ for fold in range(1, 6):
 
     # Save evaluation data for each fold.
     timestamp = datetime.datetime.now().strftime("%H%M%S")
-    path = Path(f"expt/{date}")
+    path = Path(f"expt/{date}/tf")
 
     if not path.exists():
         path.mkdir(parents=True)
@@ -136,17 +137,19 @@ for fold in range(1, 6):
         pickle.dump(dl_eval, f)
 
     # Initial model
-    model = dmodel.TFModel(embed_feature=embed_feature)
+    model = dmodel.TFModel(embed_feature=embed_feature, linear_hidden_feature=128, num_attn_head=8, tf_dim_forward=512,
+                           num_tf_layer=6, seq_conv_kernel_size=5, patt_conv_kernel_size=3)
     model.loss_function = torch.nn.NLLLoss()
     model.optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
     model.to(device)
 
     # Training setup.
-    epoch = 50
+    epoch = 70
     print(f"fold_{fold}")
     model_queue, model_fnl = logics.train(model=model, train_loader=dl_trn, valid_loader=dl_vld, epochs=epoch,
                                           valid_per_epochs=5, returns=True)
 
+    """
     # Delete files if necessary.
     try:
         utils.delete_files()
@@ -154,15 +157,16 @@ for fold in range(1, 6):
         print(f"Catch error {e}")
     except IsADirectoryError as e:
         print(f"Catch error {e}")
+    """
 
     # Evaluation setup.
     for idx, mdl in enumerate(model_queue.queue, start=1):
         timestamp = datetime.datetime.now().strftime("%H%M%S")
         mdl.name = f"model{idx}_fold{fold}_{timestamp}"
-        utils.save_parameter(model=mdl, path=f"expt/{date}", filename=f"{mdl.name}.pt")
+        utils.save_parameter(model=mdl, path=f"expt/{date}/tf", filename=f"{mdl.name}.pt")
         logics.evaluate(model=mdl, eval_loader=dl_eval)
 
     timestamp = datetime.datetime.now().strftime("%H%M%S")
     model_fnl.name = f"model_fnl_fold{fold}_{timestamp}"
-    utils.save_parameter(model=model_fnl, path=f"expt/{date}", filename=f"{model_fnl.name}.pt")
+    utils.save_parameter(model=model_fnl, path=f"expt/{date}/tf", filename=f"{model_fnl.name}.pt")
     logics.evaluate(model=model_fnl, eval_loader=dl_eval)
