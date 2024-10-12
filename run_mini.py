@@ -42,7 +42,8 @@ embedding_layer_sec = torch.nn.Embedding(num_embeddings=40, embedding_dim=embed_
 # union_fusion_seq = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, embed_feature), pool_type="2d").to(device)
 # union_fusion_patt = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, embed_feature), pool_type="2d").to(device)
 
-for fold in range(1, 6):
+# for fold in range(1, 6):
+for fold in range(1, 2):
     # Get training data and evaluation data
     """
     seq_trn_1, seq_eval_1 = utils.separate_tensor(inputs=pp["seq_1"], curr_fold=fold, total_fold=5, fold_size=fold_size)
