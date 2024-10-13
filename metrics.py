@@ -186,16 +186,16 @@ def binary_metric(pred: torch.Tensor, label: torch.Tensor) -> tuple:
         _, label_pred = torch.max(pred, dim=1)
 
         for i in range(num):
-            if label_pred[i].item != 0:
+            if label_pred[i].item() != 0:
                 label_pred[i] = 1
 
-            if label_pred[i].item() == 1 and label[i].item() == 1:
+            if label_pred[i].item() == 1 and label[i].item() != 0:
                 tp += 1
             elif label_pred[i].item() == 0 and label[i].item() == 0:
                 tn += 1
             elif label_pred[i].item() == 1 and label[i].item() == 0:
                 fp += 1
-            elif label_pred[i].item() == 0 and label[i].item() == 1:
+            elif label_pred[i].item() == 0 and label[i].item() != 0:
                 fn += 1
 
         acc = (tp + tn) / (tp + tn + fp + fn)
