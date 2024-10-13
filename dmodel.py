@@ -5,9 +5,15 @@ from torch import nn
 
 
 class TFModel(nn.Module):
-    def __init__(self, embed_feature: int, linear_hidden_feature: int = 128, num_attn_head: int = 8,
-                 tf_dim_forward: int = 512, num_tf_layer: int = 6, seq_conv_kernel_size: int = 5,
-                 patt_conv_kernel_size: int = 3, name: str = "TFModel"):
+    def __init__(self, embed_feature: int,
+                 linear_hidden_feature: int = 128,
+                 num_attn_head: int = 8,
+                 tf_dim_forward: int = 512,
+                 num_tf_layer: int = 6,
+                 seq_conv_kernel_size: int = 5,
+                 patt_conv_kernel_size: int = 3,
+                 name: str = "TFModel"
+                 ):
         super().__init__()
         self.name = name
 
@@ -128,9 +134,15 @@ class TFModel(nn.Module):
 
 
 # Use concatenation instead of advanced feature fusion.
-class TFModelMini(nn.Module):
-    def __init__(self, embed_feature: int, linear_hidden_feature: int = 64, num_attn_head: int = 8,
-                 tf_dim_forward: int = 128, num_tf_layer: int = 3, name: str = "TFModel-mini"):
+class TFModelLite(nn.Module):
+    def __init__(self,
+                 embed_feature: int,
+                 linear_hidden_feature: int = 64,
+                 num_attn_head: int = 8,
+                 tf_dim_forward: int = 128,
+                 num_tf_layer: int = 3,
+                 name: str = "TFModel-lite"
+                ):
         super().__init__()
         self.name = name
 

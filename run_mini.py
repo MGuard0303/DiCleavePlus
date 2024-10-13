@@ -126,7 +126,7 @@ for fold in range(1, 2):
         pickle.dump(dl_eval, f)
 
     # Initial model
-    model = dmodel.TFModelMini(
+    model = dmodel.TFModelLite(
         embed_feature=2 * embed_feature,
         linear_hidden_feature=64,
         num_attn_head=8,
