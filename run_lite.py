@@ -117,7 +117,7 @@ for fold in range(1, 2):
 
     # Save evaluation data for each fold.
     timestamp = datetime.datetime.now().strftime("%H%M%S")
-    path = Path(f"expt/{date}/mini")
+    path = Path(f"expt/{date}/lite")
 
     if not path.exists():
         path.mkdir(parents=True)
@@ -157,10 +157,10 @@ for fold in range(1, 2):
     for idx, mdl in enumerate(model_queue.queue, start=1):
         timestamp = datetime.datetime.now().strftime("%H%M%S")
         mdl.name = f"model{idx}_fold{fold}_{timestamp}"
-        utils.save_parameter(model=mdl, path=f"expt/{date}/mini", filename=f"{mdl.name}.pt")
+        utils.save_parameter(model=mdl, path=f"expt/{date}/lite", filename=f"{mdl.name}.pt")
         logics.evaluate(model=mdl, eval_loader=dl_eval)
 
     timestamp = datetime.datetime.now().strftime("%H%M%S")
     model_fnl.name = f"model_fnl_fold{fold}_{timestamp}"
-    utils.save_parameter(model=model_fnl, path=f"expt/{date}/mini", filename=f"{model_fnl.name}.pt")
+    utils.save_parameter(model=model_fnl, path=f"expt/{date}/lite", filename=f"{model_fnl.name}.pt")
     logics.evaluate(model=model_fnl, eval_loader=dl_eval)
