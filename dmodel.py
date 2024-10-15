@@ -142,7 +142,7 @@ class TFModelLite(nn.Module):
                  tf_dim_forward: int = 128,
                  num_tf_layer: int = 3,
                  name: str = "TFModel-lite"
-                ):
+                 ):
         super().__init__()
         self.name = name
 
