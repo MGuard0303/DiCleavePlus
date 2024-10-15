@@ -19,12 +19,12 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Training codes for SPOT-RNA secondary structure
 # Load dataset and separate data for k-fold
-path = "dataset/rnafold/dataset_b/dataset_b.csv"
+path = "dataset/rnafold/dataset_adj/dataset_adj.csv"
 df = pd.read_csv(path)
 fold_size, _ = divmod(len(df), 5)
 
 # Load pre-precessed data
-with open("dataset/rnafold/dataset_b/pre_processed.pickle", "rb") as f:
+with open("dataset/rnafold/dataset_adj/preprocessed.pickle", "rb") as f:
     pp = pickle.load(f)
 
 embed_feature = 32
