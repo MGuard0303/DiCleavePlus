@@ -139,7 +139,7 @@ class TFModelLite(nn.Module):
                  embed_feature: int,
                  linear_hidden_feature: int = 64,
                  num_attn_head: int = 8,
-                 tf_dim_forward: int = 128,
+                 tf_dim_forward: int = 256,
                  num_tf_layer: int = 3,
                  name: str = "TFModel-lite"
                  ):
