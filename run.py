@@ -29,63 +29,21 @@ with open("dataset/rnafold/dataset_adj/preprocessed.pickle", "rb") as f:
 
 embed_feature = 32
 
-"""
-embedding_layer_seq = (dmodel.EmbeddingLayer(embed_dim=embed_feature, softmax_dim=1, is_secondary_structure=False).
-                       to(device))
-embedding_layer_sec = (dmodel.EmbeddingLayer(embed_dim=embed_feature, softmax_dim=1, is_secondary_structure=True).
-                       to(device))
-"""
-
 embedding_layer_seq = torch.nn.Embedding(num_embeddings=85, embedding_dim=embed_feature, padding_idx=0).to(device)
 embedding_layer_sec = torch.nn.Embedding(num_embeddings=40, embedding_dim=embed_feature, padding_idx=0).to(device)
 
 union_fusion_seq = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, embed_feature), pool_type="2d").to(device)
 union_fusion_patt = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, embed_feature), pool_type="2d").to(device)
 
-# for fold in range(1, 6):
+# for fold in range(adj, 6):
 for fold in range(1, 2):
     # Get training data and evaluation data
-    """
-    seq_trn_1, seq_eval_1 = utils.separate_tensor(inputs=pp["seq_1"], curr_fold=fold, total_fold=5, fold_size=fold_size)
-    seq_trn_2, seq_eval_2 = utils.separate_tensor(inputs=pp["seq_2"], curr_fold=fold, total_fold=5, fold_size=fold_size)
-    seq_trn_3, seq_eval_3 = utils.separate_tensor(inputs=pp["seq_3"], curr_fold=fold, total_fold=5, fold_size=fold_size)
-
-    db_trn_1, db_eval_1 = utils.separate_tensor(inputs=pp["db_1"], curr_fold=fold, total_fold=5, fold_size=fold_size)
-    db_trn_2, db_eval_2 = utils.separate_tensor(inputs=pp["db_2"], curr_fold=fold, total_fold=5, fold_size=fold_size)
-    db_trn_3, db_eval_3 = utils.separate_tensor(inputs=pp["db_3"], curr_fold=fold, total_fold=5, fold_size=fold_size)
-
-    patt_trn_1, patt_eval_1 = utils.separate_tensor(inputs=pp["patt_1"], curr_fold=fold, total_fold=5,
-                                                    fold_size=fold_size)
-    patt_trn_2, patt_eval_2 = utils.separate_tensor(inputs=pp["patt_2"], curr_fold=fold, total_fold=5,
-                                                    fold_size=fold_size)
-    patt_trn_3, patt_eval_3 = utils.separate_tensor(inputs=pp["patt_3"], curr_fold=fold, total_fold=5,
-                                                    fold_size=fold_size)
-
-    patt_db_trn_1, patt_db_eval_1 = utils.separate_tensor(inputs=pp["patt_db_1"], curr_fold=fold, total_fold=5,
-                                                          fold_size=fold_size)
-    patt_db_trn_2, patt_db_eval_2 = utils.separate_tensor(inputs=pp["patt_db_2"], curr_fold=fold, total_fold=5,
-                                                          fold_size=fold_size)
-    patt_db_trn_3, patt_db_eval_3 = utils.separate_tensor(inputs=pp["patt_db_3"], curr_fold=fold, total_fold=5,
-                                                          fold_size=fold_size)
-    """
-
     seq_trn, seq_eval = utils.separate_tensor(inputs=pp["seq_3"], curr_fold=fold, total_fold=5, fold_size=fold_size)
     db_trn, db_eval = utils.separate_tensor(inputs=pp["db_3"], curr_fold=fold, total_fold=5, fold_size=fold_size)
     patt_trn, patt_eval = utils.separate_tensor(inputs=pp["patt_3"], curr_fold=fold, total_fold=5, fold_size=fold_size)
     patt_db_trn, patt_db_eval = utils.separate_tensor(inputs=pp["patt_db_3"], curr_fold=fold, total_fold=5,
                                                       fold_size=fold_size)
     lbl_trn, lbl_eval = utils.separate_tensor(inputs=pp["label"], curr_fold=fold, total_fold=5, fold_size=fold_size)
-
-    """
-    seq_trn = embedding_layer_seq(seq_trn_1, seq_trn_2, seq_trn_3)
-    seq_eval = embedding_layer_seq(seq_eval_1, seq_eval_2, seq_eval_3)
-    db_trn = embedding_layer_sec(db_trn_1, db_trn_2, db_trn_3)
-    db_eval = embedding_layer_sec(db_eval_1, db_eval_2, db_eval_3)
-    patt_trn = embedding_layer_seq(patt_trn_1, patt_trn_2, patt_trn_3)
-    patt_eval = embedding_layer_seq(patt_eval_1, patt_eval_2, patt_eval_3)
-    patt_db_trn = embedding_layer_sec(patt_db_trn_1, patt_db_trn_2, patt_db_trn_3)
-    patt_db_eval = embedding_layer_sec(patt_db_eval_1, patt_db_eval_2, patt_db_eval_3)
-    """
 
     seq_trn = embedding_layer_seq(seq_trn)
     seq_eval = embedding_layer_seq(seq_eval)
@@ -155,16 +113,6 @@ for fold in range(1, 2):
     print(f"fold_{fold}")
     model_queue, model_fnl = logics.train(model=model, train_loader=dl_trn, valid_loader=dl_vld, epochs=epoch,
                                           valid_per_epochs=5, returns=True)
-
-    """
-    # Delete files if necessary.
-    try:
-        utils.delete_files()
-    except FileNotFoundError as e:
-        print(f"Catch error {e}")
-    except IsADirectoryError as e:
-        print(f"Catch error {e}")
-    """
 
     # Evaluation setup.
     for idx, mdl in enumerate(model_queue.queue, start=1):

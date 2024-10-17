@@ -295,30 +295,6 @@ class SelfWeightFusionLayer(nn.Module):
         return fused, ws
 
 
-"""
-# Used gates similar in LSTM to control the contribution of each feature
-class GatedFusionLayer(nn.Module):
-    def __init__(self, input_feature: int, fused_feature: int):
-        super().__init__()
-        self.gate = nn.Linear(input_feature, fused_feature)
-        self.sigmoid = nn.Sigmoid()
-        self.fusion = nn.Linear(fused_feature, fused_feature)
-
-    def forward(self, *args: torch.Tensor) -> tuple:
-        fused = torch.zeros_like(args[0])
-        gs = []
-
-        for t in args:
-            g = self.sigmoid(self.gate(t))
-            fused += g * t
-            gs.append(g)
-
-        fused = self.fusion(fused)
-
-        return fused, gs
-"""
-
-
 # Use Attentional Feature Fusion (AFF) module to fuse two feature.
 class AttentionalFeatureFusionLayer(nn.Module):
     def __init__(self, glo_pool_size: int | tuple, pool_type: str):
@@ -393,53 +369,3 @@ class EmbeddingLayer(nn.Module):
             fused = torch.cat((em1, em2, em3), dim=2)
 
         return fused
-
-
-"""
-class RNNModel(nn.Module):
-    def __init__(self, input_dimension: int, hidden_feature: int, name: str = "RNNModel"):
-        super().__init__()
-        self.name = name
-
-        self.pat_lstm = nn.LSTM(input_size=input_dimension, hidden_size=hidden_feature, num_layers=2)
-
-        self.seq_lstm = nn.LSTM(input_size=input_dimension, hidden_size=hidden_feature, num_layers=2)
-
-        self.flatten = nn.Flatten()
-        self.fc = nn.Sequential(
-            nn.Linear(in_features=14*hidden_feature, out_features=512),
-            nn.LeakyReLU(),
-            nn.Dropout(),
-            nn.Linear(in_features=512, out_features=128),
-            nn.LeakyReLU(),
-            nn.Dropout(),
-            nn.Linear(in_features=128, out_features=32),
-            nn.LeakyReLU(),
-            nn.Dropout(),
-            nn.Linear(in_features=32, out_features=16),
-            nn.LeakyReLU()
-        )
-
-        self.output_layer = nn.Sequential(
-            nn.Linear(in_features=16, out_features=3),
-            nn.LogSoftmax(dim=1)
-        )
-
-    # Shape of pattern inputs is (Batch, Length, Dimension)
-    # Shape of sequence inputs is (Batch, Length, Dimension)
-    def forward(self, sequence: torch.Tensor, pattern: torch.Tensor) -> torch.Tensor:
-        pattern = torch.permute(input=pattern, dims=(1, 0, 2))
-        pattern, _ = self.pat_lstm(pattern)  # (L, B, D)
-        pattern = torch.permute(input=pattern, dims=(1, 0, 2))  # Final shape (B, L, D)
-
-        sequence = torch.permute(input=sequence, dims=(1, 0, 2))
-        sequence, _ = self.seq_lstm(sequence)  # (L, B, D)
-        sequence = torch.permute(input=sequence, dims=(1, 0, 2))  # Final shape (B, L, D)
-
-        embed = pattern + sequence
-        embed = self.flatten(embed)
-        embed = self.fc(embed)
-        embed = self.output_layer(embed)
-
-        return embed
-"""
