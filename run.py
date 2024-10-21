@@ -32,8 +32,8 @@ embed_feature = 32
 embedding_layer_seq = torch.nn.Embedding(num_embeddings=85, embedding_dim=embed_feature, padding_idx=0).to(device)
 embedding_layer_sec = torch.nn.Embedding(num_embeddings=40, embedding_dim=embed_feature, padding_idx=0).to(device)
 
-union_fusion_seq = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, embed_feature), pool_type="2d").to(device)
-union_fusion_patt = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, embed_feature), pool_type="2d").to(device)
+aff_seq = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, embed_feature), pool_type="2d").to(device)
+aff_patt = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, embed_feature), pool_type="2d").to(device)
 
 # for fold in range(adj, 6):
 for fold in range(1, 2):
@@ -54,10 +54,10 @@ for fold in range(1, 2):
     patt_db_trn = embedding_layer_sec(patt_db_trn)
     patt_db_eval = embedding_layer_sec(patt_db_eval)
 
-    sequence_trn, _ = union_fusion_seq(seq_trn, db_trn)
-    sequence_eval, _ = union_fusion_seq(seq_eval, db_eval)
-    pattern_trn, _ = union_fusion_patt(patt_trn, patt_db_trn)
-    pattern_eval, _ = union_fusion_patt(patt_eval, patt_db_eval)
+    sequence_trn, _ = aff_seq(seq_trn, db_trn)
+    sequence_eval, _ = aff_seq(seq_eval, db_eval)
+    pattern_trn, _ = aff_patt(patt_trn, patt_db_trn)
+    pattern_eval, _ = aff_patt(patt_eval, patt_db_eval)
 
     # Get validation data from training data
     ori_trn_size = len(sequence_trn)
