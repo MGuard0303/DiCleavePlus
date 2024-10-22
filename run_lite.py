@@ -92,7 +92,7 @@ for fold in range(1, 6):
 
     # Initial model
     model = dmodel.TFModelLite(
-        embed_feature=2 * embed_feature,
+        embed_feature=2*embed_feature,
         linear_hidden_feature=64,
         num_attn_head=8,
         tf_dim_forward=256,
