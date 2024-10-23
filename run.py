@@ -32,18 +32,18 @@ embed_feature = 32
 embedding_layer_seq = torch.nn.Embedding(num_embeddings=85, embedding_dim=embed_feature, padding_idx=0).to(device)
 embedding_layer_sec = torch.nn.Embedding(num_embeddings=40, embedding_dim=embed_feature, padding_idx=0).to(device)
 
-aff_seq = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, embed_feature), pool_type="2d").to(device)
-aff_patt = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, embed_feature), pool_type="2d").to(device)
+# aff_seq = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(200, embed_feature), pool_type="2d").to(device)
+# aff_patt = dmodel.AttentionalFeatureFusionLayer(glo_pool_size=(14, embed_feature), pool_type="2d").to(device)
 
-# for fold in range(1, 6):
-for fold in range(1, 2):
+for fold in range(1, 6):
     # Get training data and evaluation data
-    seq_trn, seq_eval = utils.separate_tensor(inputs=pp["seq_3"], curr_fold=fold, total_fold=5, fold_size=fold_size)
-    db_trn, db_eval = utils.separate_tensor(inputs=pp["db_3"], curr_fold=fold, total_fold=5, fold_size=fold_size)
-    patt_trn, patt_eval = utils.separate_tensor(inputs=pp["patt_3"], curr_fold=fold, total_fold=5, fold_size=fold_size)
-    patt_db_trn, patt_db_eval = utils.separate_tensor(inputs=pp["patt_db_3"], curr_fold=fold, total_fold=5,
+    seq_trn, seq_eval = utils.separate_tensor(inputs=pp["seq_3"], curr_fold=fold-1, total_fold=5, fold_size=fold_size)
+    db_trn, db_eval = utils.separate_tensor(inputs=pp["db_3"], curr_fold=fold-1, total_fold=5, fold_size=fold_size)
+    patt_trn, patt_eval = utils.separate_tensor(inputs=pp["patt_3"], curr_fold=fold-1, total_fold=5,
+                                                fold_size=fold_size)
+    patt_db_trn, patt_db_eval = utils.separate_tensor(inputs=pp["patt_db_3"], curr_fold=fold-1, total_fold=5,
                                                       fold_size=fold_size)
-    lbl_trn, lbl_eval = utils.separate_tensor(inputs=pp["label"], curr_fold=fold, total_fold=5, fold_size=fold_size)
+    lbl_trn, lbl_eval = utils.separate_tensor(inputs=pp["label"], curr_fold=fold-1, total_fold=5, fold_size=fold_size)
 
     seq_trn = embedding_layer_seq(seq_trn)
     seq_eval = embedding_layer_seq(seq_eval)
@@ -54,10 +54,16 @@ for fold in range(1, 2):
     patt_db_trn = embedding_layer_sec(patt_db_trn)
     patt_db_eval = embedding_layer_sec(patt_db_eval)
 
+    """
     sequence_trn, _ = aff_seq(seq_trn, db_trn)
     sequence_eval, _ = aff_seq(seq_eval, db_eval)
     pattern_trn, _ = aff_patt(patt_trn, patt_db_trn)
     pattern_eval, _ = aff_patt(patt_eval, patt_db_eval)
+    """
+    sequence_trn = torch.cat((seq_trn, db_trn), dim=2)
+    sequence_eval = torch.cat((seq_eval, db_eval), dim=2)
+    pattern_trn = torch.cat((patt_trn, patt_db_trn), dim=2)
+    pattern_eval = torch.cat((patt_eval, patt_db_eval), dim=2)
 
     # Get validation data from training data
     ori_trn_size = len(sequence_trn)
@@ -86,7 +92,7 @@ for fold in range(1, 2):
 
     # Save evaluation data for each fold.
     timestamp = datetime.datetime.now().strftime("%H%M%S")
-    path = Path(f"expt/{date}/tf")
+    path = Path(f"expt/{date}/alter/adj")
 
     if not path.exists():
         path.mkdir(parents=True)
@@ -95,21 +101,19 @@ for fold in range(1, 2):
         pickle.dump(dl_eval, f)
 
     # Initial model
-    model = dmodel.TFModel(
-        embed_feature=embed_feature,
-        linear_hidden_feature=128,
+    model = dmodel.TFModelAlter(
+        embed_feature=2*embed_feature,
+        linear_hidden_feature=64,
         num_attn_head=8,
-        tf_dim_forward=512,
-        num_tf_layer=6,
-        seq_conv_kernel_size=5,
-        patt_conv_kernel_size=3,
+        tf_dim_forward=256,
+        num_tf_layer=3,
     )
     model.loss_function = torch.nn.NLLLoss()
     model.optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
     model.to(device)
 
     # Training setup.
-    epoch = 70
+    epoch = 75
     print(f"fold_{fold}")
     model_queue, model_fnl = logics.train(model=model, train_loader=dl_trn, valid_loader=dl_vld, epochs=epoch,
                                           valid_per_epochs=5, returns=True)
@@ -118,10 +122,10 @@ for fold in range(1, 2):
     for idx, mdl in enumerate(model_queue.queue, start=1):
         timestamp = datetime.datetime.now().strftime("%H%M%S")
         mdl.name = f"model{idx}_fold{fold}_{timestamp}"
-        utils.save_parameter(model=mdl, path=f"expt/{date}/tf", filename=f"{mdl.name}.pt")
+        utils.save_parameter(model=mdl, path=f"expt/{date}/alter/adj", filename=f"{mdl.name}.pt")
         logics.evaluate(model=mdl, eval_loader=dl_eval)
 
     timestamp = datetime.datetime.now().strftime("%H%M%S")
     model_fnl.name = f"model_fnl_fold{fold}_{timestamp}"
-    utils.save_parameter(model=model_fnl, path=f"expt/{date}/tf", filename=f"{model_fnl.name}.pt")
+    utils.save_parameter(model=model_fnl, path=f"expt/{date}/alter/adj", filename=f"{model_fnl.name}.pt")
     logics.evaluate(model=model_fnl, eval_loader=dl_eval)

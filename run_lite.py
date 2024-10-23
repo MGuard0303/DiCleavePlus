@@ -34,12 +34,13 @@ embedding_layer_sec = torch.nn.Embedding(num_embeddings=40, embedding_dim=embed_
 
 for fold in range(1, 6):
     # Get training data and evaluation data
-    seq_trn, seq_eval = utils.separate_tensor(inputs=pp["seq_3"], curr_fold=fold, total_fold=5, fold_size=fold_size)
-    db_trn, db_eval = utils.separate_tensor(inputs=pp["db_3"], curr_fold=fold, total_fold=5, fold_size=fold_size)
-    patt_trn, patt_eval = utils.separate_tensor(inputs=pp["patt_3"], curr_fold=fold, total_fold=5, fold_size=fold_size)
-    patt_db_trn, patt_db_eval = utils.separate_tensor(inputs=pp["patt_db_3"], curr_fold=fold, total_fold=5,
+    seq_trn, seq_eval = utils.separate_tensor(inputs=pp["seq_3"], curr_fold=fold-1, total_fold=5, fold_size=fold_size)
+    db_trn, db_eval = utils.separate_tensor(inputs=pp["db_3"], curr_fold=fold-1, total_fold=5, fold_size=fold_size)
+    patt_trn, patt_eval = utils.separate_tensor(inputs=pp["patt_3"], curr_fold=fold-1, total_fold=5,
+                                                fold_size=fold_size)
+    patt_db_trn, patt_db_eval = utils.separate_tensor(inputs=pp["patt_db_3"], curr_fold=fold-1, total_fold=5,
                                                       fold_size=fold_size)
-    lbl_trn, lbl_eval = utils.separate_tensor(inputs=pp["label"], curr_fold=fold, total_fold=5, fold_size=fold_size)
+    lbl_trn, lbl_eval = utils.separate_tensor(inputs=pp["label"], curr_fold=fold-1, total_fold=5, fold_size=fold_size)
 
     seq_trn = embedding_layer_seq(seq_trn)
     seq_eval = embedding_layer_seq(seq_eval)
@@ -82,7 +83,7 @@ for fold in range(1, 6):
 
     # Save evaluation data for each fold.
     timestamp = datetime.datetime.now().strftime("%H%M%S")
-    path = Path(f"expt/{date}/lite")
+    path = Path(f"expt/{date}/lite/adj")
 
     if not path.exists():
         path.mkdir(parents=True)
@@ -112,8 +113,8 @@ for fold in range(1, 6):
     for idx, mdl in enumerate(model_queue.queue, start=1):
         timestamp = datetime.datetime.now().strftime("%H%M%S")
         mdl.name = f"model{idx}_fold{fold}_{timestamp}"
-        utils.save_parameter(model=mdl, path=f"expt/{date}/lite", filename=f"{mdl.name}.pt")
+        utils.save_parameter(model=mdl, path=f"expt/{date}/lite/adj", filename=f"{mdl.name}.pt")
 
     timestamp = datetime.datetime.now().strftime("%H%M%S")
     model_fnl.name = f"model_fnl_fold{fold}_{timestamp}"
-    utils.save_parameter(model=model_fnl, path=f"expt/{date}/lite", filename=f"{model_fnl.name}.pt")
+    utils.save_parameter(model=model_fnl, path=f"expt/{date}/lite/adj", filename=f"{model_fnl.name}.pt")
