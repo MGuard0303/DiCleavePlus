@@ -138,6 +138,8 @@ def evaluate(model: torch.nn.Module, eval_loader: DataLoader, returns: bool = Fa
     pse_ext = metrics.pse_ext(eval_pred, eval_lbl)
     pmf = metrics.pmf(eval_pred, eval_lbl)
     pse = metrics.pse(eval_pred, eval_lbl)
+    macro_f1 = metrics.f1_score(pred=eval_pred_ls, label=eval_lbl_ls, average="macro")
+    weighted_f1 = metrics.f1_score(pred=eval_pred_ls, label=eval_lbl_ls, average="weighted")
     topk_acc = metrics.topk_acc(eval_pred, eval_lbl, k=3)
     binary_acc, binary_spe, binary_sen, binary_mcc = metrics.binary_metric(eval_pred, eval_lbl)
 
@@ -146,6 +148,7 @@ def evaluate(model: torch.nn.Module, eval_loader: DataLoader, returns: bool = Fa
     print(f"| Average Evaluation Loss: {avg_eval_loss:.3f} |")
     print(f"| PMF-Ext: {pmf_ext:.3f} | PSE-Ext: {pse_ext:.3f} |")
     print(f"| PMF: {pmf:.3f} | PSE: {pse:.3f} |")
+    print(f"| Macro F1 Score: {macro_f1:.3f} | Weighted F1 Score: {weighted_f1:.3f} |")
     print(f"| Top-k Accuracy: {topk_acc:.3f} |")
     print(f"PN Binary Performance")
     print(f"| Accuracy: {binary_acc:.3f} | Specificity: {binary_spe:.3f} | Sensitivity: {binary_sen:.3f} | "

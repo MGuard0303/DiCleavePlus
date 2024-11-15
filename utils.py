@@ -191,3 +191,34 @@ def delete_files(path: str = None, chars: str = None) -> None:
                 os.remove(del_path)
             else:
                 raise IsADirectoryError("You are trying to delete a directory, not a file.")
+
+
+# Return binary confusion matrix.
+# Return form is (TP, TN, FP, FN).
+def binary_confusion_matrix(pred: torch.Tensor, label: torch.Tensor) -> tuple:
+    if len(pred) != len(label):
+        raise ValueError("The length of prediction tensor and label does not match.")
+    else:
+        pred = pred.detach()
+        pred = torch.exp(pred)
+        label = label.detach()
+
+        tp, tn, fp, fn = 0, 0, 0, 0
+        num = len(pred)
+
+        _, label_pred = torch.max(pred, dim=1)
+
+        for i in range(num):
+            if label_pred[i].item() != 0:
+                label_pred[i] = 1
+
+            if label_pred[i].item() == 1 and label[i].item() != 0:
+                tp += 1
+            elif label_pred[i].item() == 0 and label[i].item() == 0:
+                tn += 1
+            elif label_pred[i].item() == 1 and label[i].item() == 0:
+                fp += 1
+            elif label_pred[i].item() == 0 and label[i].item() != 0:
+                fn += 1
+
+        return tp, tn, fp, fn

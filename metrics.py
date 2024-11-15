@@ -1,6 +1,7 @@
 import math
 
 import torch
+import sklearn
 
 
 """
@@ -225,3 +226,13 @@ def topk_acc(pred: torch.Tensor, label: torch.Tensor, k: int = 3) -> float:
                 hit += 1
 
         return hit / num
+
+
+def f1_score(pred: list, label: list, average: str) -> float:
+    if len(pred) != len(label):
+        raise ValueError("The length of prediction tensor and label tensor does not match.")
+    else:
+        labels = [i for i in range(14)]
+        f1 = sklearn.metrics.f1_score(y_true=labels, y_pred=pred, labels=labels, average=average)
+
+        return f1
