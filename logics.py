@@ -138,8 +138,8 @@ def evaluate(model: torch.nn.Module, eval_loader: DataLoader, returns: bool = Fa
     pse_ext = metrics.pse_ext(eval_pred, eval_lbl)
     pmf = metrics.pmf(eval_pred, eval_lbl)
     pse = metrics.pse(eval_pred, eval_lbl)
-    macro_f1 = metrics.f1_score(pred=eval_pred_ls, label=eval_lbl_ls, average="macro")
-    weighted_f1 = metrics.f1_score(pred=eval_pred_ls, label=eval_lbl_ls, average="weighted")
+    macro_f1 = metrics.multi_f1(pred=eval_pred, label=eval_lbl, average="macro")
+    weighted_f1 = metrics.multi_f1(pred=eval_pred, label=eval_lbl, average="weighted")
     topk_acc = metrics.topk_acc(eval_pred, eval_lbl, k=3)
     binary_acc, binary_spe, binary_sen, binary_mcc = metrics.binary_metric(eval_pred, eval_lbl)
 
