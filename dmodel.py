@@ -4,7 +4,7 @@ import torch
 from torch import nn
 
 
-# Deprecated
+# DEPRECATED
 class TFModel(nn.Module):
     def __init__(self, embed_feature: int,
                  linear_hidden_feature: int = 128,
@@ -388,7 +388,7 @@ class PositionEncoder(nn.Module):
         return x
 
 
-# Deprecated
+# DEPRECATED
 # Fuse different kmers embeddings using attention
 # softmax_dim should be the length dimension of input embedding
 # Assume the input size is (Batch, Length, Dimension)
@@ -453,7 +453,7 @@ class AttentionalFeatureFusionLayer(nn.Module):
         return fused, w
 
 
-# Deprecated
+# DEPRECATED
 # Embed and fuse sequence and secondary kmer raw tensors into sequence input and pattern input.
 class EmbeddingLayer(nn.Module):
     def __init__(self, embed_dim: int, softmax_dim: int, is_secondary_structure: bool = False,
