@@ -107,7 +107,7 @@ for fold in range(1, 6):
     epoch = 75
     print(f"fold_{fold}")
     model_queue, model_fnl = logics.train(model=model, train_loader=dl_trn, valid_loader=dl_vld, epochs=epoch,
-                                          valid_per_epochs=5, returns=True)
+                                          valid_per_epochs=5, is_return=True)
 
     # Save model parameters.
     for idx, mdl in enumerate(model_queue.queue, start=1):

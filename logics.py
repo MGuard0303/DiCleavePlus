@@ -37,7 +37,7 @@ def valid_process(model: torch.nn.Module, sequence: torch.Tensor, pattern: torch
 
 
 def train(model: torch.nn.Module, train_loader: DataLoader, valid_loader: DataLoader, epochs: int,
-          valid_per_epochs: int, returns: bool = False) -> tuple:
+          valid_per_epochs: int, is_return: bool = False) -> tuple:
     print(f"Model {model.name}: Start training...")
 
     tolerance = 3
@@ -97,7 +97,7 @@ def train(model: torch.nn.Module, train_loader: DataLoader, valid_loader: DataLo
 
     print(f"{model.name}: Training complete.")
 
-    if returns:
+    if is_return:
         return m_queue, model
 
 
