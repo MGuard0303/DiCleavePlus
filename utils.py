@@ -7,48 +7,6 @@ import torch
 from torch import nn
 
 
-"""
-# This function generates one_hot_encoding from input sequences
-# The shape of output is (Batch, Length, Dimension)
-def one_hot_encoding(inputs: list | np.ndarray, token: list, is_pad: bool = False, max_length: int = None) -> (
-        torch.Tensor):
-    label_encoder = preprocessing.LabelEncoder()
-    label_encoder.fit(token)
-    one_hots = []
-
-    for item in inputs:
-        int_seq = label_encoder.transform(list(item))
-        int_tensor = torch.tensor(int_seq)
-
-        # Create a zeros tensor with size(Length, Dimension)
-        oh_tensor = torch.zeros(len(int_tensor), len(token), dtype=torch.float)
-        for i in range(len(int_tensor)):
-            oh_tensor[i, int_tensor[i]] = 1.0
-
-        if is_pad and max_length is not None:
-            oh_tensor = torch.transpose(oh_tensor, dim0=0, dim1=1)
-            oh_tensor = F.pad(oh_tensor, (0, max_length - oh_tensor.size(1)))
-            oh_tensor = torch.transpose(oh_tensor, dim0=0, dim1=1)
-
-        one_hots.append(oh_tensor)
-
-    one_hot_tensor = torch.stack(one_hots)
-
-    return one_hot_tensor
-
-
-# Get the list of lengths of sequences
-def get_length(inputs: list | np.ndarray) -> list:
-    lengths = []
-
-    for i in inputs:
-        length = len(i)
-        lengths.append(length)
-
-    return lengths
-"""
-
-
 # Obtain k-mer for a given sequence
 def kmer(seq: str, k: int) -> list:
     kmers = []
