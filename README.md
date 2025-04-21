@@ -1,5 +1,10 @@
 # DiCleavePlus
 
+DiCleavePlus is a Transformer-based model for human Dicer cleavage site prediction. We extend Cleavage Pattern by allowing cleavage sites to appear at any interval within the pattern. This architecture employs encoder part of Transformer as the feature extractor and implements attentional feature fusion (AFF) blocks to integrate different features.
+
+<br>
+<br>
+
 ## Requirement
 The basic environment requirement is listed below:
 * `python >= 3.11.10`
@@ -10,7 +15,7 @@ The basic environment requirement is listed below:
 
 <br>
 
-We provide conda environment file in env directory. We recommand to build conda virtual environment with this file when using DiCleavePlus.
+We provide conda environment file in `./env` directory. We recommand to build conda virtual environment with this file when using DiCleavePlus.
 
 To establish the environment, use these codes below:
 
@@ -21,3 +26,14 @@ To establish the environment, use these codes below:
 `conda env create -f ./env/env.yaml`
 
 Note that you need to install PyTorch by yourself because PyTorch provides different packages depending on the device (briefly, GPU version and CPU-only version). Please refer https://pytorch.org/get-started/locally/ and https://pytorch.org/get-started/previous-versions/ to install the proper PyTorch version.
+
+<br>
+<br>
+
+## Usage
+
+### Verify results from our paper
+
+To verify results from our paper, please use **verify.py** file.
+
+`python verify.py`
