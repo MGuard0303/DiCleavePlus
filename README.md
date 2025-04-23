@@ -34,6 +34,6 @@ Note that you need to install PyTorch by yourself because PyTorch provides diffe
 
 ### Verify results from our paper
 
-To verify results from our paper, please use **verify.py** file.
+To verify results from our paper, please use **example.py** file.
 
-`python verify.py`
+`python example.py`
