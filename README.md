@@ -15,7 +15,7 @@ The basic environment requirement is listed below:
 
 <br>
 
-We provide conda environment file in `./env` directory. We recommand to build conda virtual environment with this file when using DiCleavePlus.
+We provide conda environment file in `./env` directory. We recommend to build conda virtual environment with this file when using DiCleavePlus.
 
 To establish the environment, use these codes below:
 

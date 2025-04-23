@@ -242,7 +242,6 @@ fabric.properties
 
 
 # Project particular
-README.md
 .DS_Store
 expt/
 dataset/
