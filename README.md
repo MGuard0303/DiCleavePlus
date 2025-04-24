@@ -17,7 +17,7 @@ The basic environment requirement is listed below:
 
 We provide conda environment file in `./env` directory. We recommend to build conda virtual environment with this file when using DiCleavePlus.
 
-To establish the environment, use these codes below:
+To set up the environment, use these codes below:
 
 `git clone https://github.com/MGuard0303/DiCleavePlus.git/<YOUR DIRECTORY>`
 
@@ -34,6 +34,6 @@ Note that you need to install PyTorch by yourself because PyTorch provides diffe
 
 ### Verify results from our paper
 
-To verify results from our paper, please use **example.py** file.
+To verify results from our paper, please use **verify.py** file.
 
-`python example.py`
+`python verify.py`
