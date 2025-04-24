@@ -153,6 +153,7 @@ def evaluate(model: torch.nn.Module, eval_loader: DataLoader, returns: bool = Fa
     print(f"PN Binary Performance")
     print(f"| Accuracy: {binary_acc:.3f} | Specificity: {binary_spe:.3f} | Sensitivity: {binary_sen:.3f} | "
           f"MCC: {binary_mcc:.3f} |")
+    print()
 
     if returns:
         return eval_pred, eval_lbl
