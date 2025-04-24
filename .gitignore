@@ -163,3 +163,4 @@ cython_debug/
 .DS_Store
 expt/
 dataset/
+example/
