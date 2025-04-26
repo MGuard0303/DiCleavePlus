@@ -5,7 +5,8 @@ DiCleavePlus is a Transformer-based model for human Dicer cleavage site predicti
 <br>
 <br>
 
-## Requirement
+## Set up
+### Requirement
 The basic environment requirement is listed below:
 * `python >= 3.11.10`
 * `numpy >= 1.26.0`
@@ -26,6 +27,11 @@ To set up the environment, use these codes below:
 `conda env create -f ./env/env.yaml`
 
 Note that you need to install PyTorch by yourself because PyTorch provides different packages depending on the device (briefly, GPU version and CPU-only version). Please refer https://pytorch.org/get-started/locally/ and https://pytorch.org/get-started/previous-versions/ to install the proper PyTorch version.
+
+### Verification data
+We provide data for verifying the results of our paper in GitHub Releases. To download verification data, run:
+
+`wget https://github.com/MGuard0303/DiCleavePlus/releases/tag/0.9.0/verify.tar.gz`
 
 <br>
 <br>
