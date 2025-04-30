@@ -72,7 +72,7 @@ for fold in range(1, 6):
     lbl_vld = lbl_trn[idx_vld]
     lbl_trn = lbl_trn[idx_trn]
 
-    # Wrap data to Dataset
+    # Wrap data to Dataset and DataLoader
     ds_trn = TensorDataset(sequence_trn, pattern_trn, lbl_trn)
     ds_vld = TensorDataset(sequence_vld, pattern_vld, lbl_vld)
     ds_eval = TensorDataset(sequence_eval, pattern_eval, lbl_eval)
