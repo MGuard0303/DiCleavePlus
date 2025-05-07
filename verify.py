@@ -3,7 +3,7 @@ from pathlib import Path
 
 import torch
 
-import dmodel
+import dlmodel
 import logics
 
 
@@ -43,7 +43,7 @@ for fold in range(1, 6):
     with open(dls[f"fold{fold}"][0], "rb") as f:
         dl = pickle.load(f)
 
-    model = dmodel.ModelAFF(
+    model = dlmodel.ModelAFF(
         embed_feature=2*embed_feature,
         linear_hidden_feature=64,
         num_attn_head=8,
@@ -83,7 +83,7 @@ for fold in range(1, 6):
     with open(dls[f"fold{fold}"][0], "rb") as f:
         dl = pickle.load(f)
 
-    model = dmodel.ModelAFF(
+    model = dlmodel.ModelAFF(
         embed_feature=2 * embed_feature,
         linear_hidden_feature=64,
         num_attn_head=8,
@@ -123,7 +123,7 @@ for fold in range(1, 6):
     with open(dls[f"fold{fold}"][0], "rb") as f:
         dl = pickle.load(f)
 
-    model = dmodel.ModelConcat(
+    model = dlmodel.ModelConcat(
         embed_feature=2 * embed_feature,
         linear_hidden_feature=64,
         num_attn_head=8,
@@ -162,7 +162,7 @@ for fold in range(1, 6):
     with open(dls[f"fold{fold}"][0], "rb") as f:
         dl = pickle.load(f)
 
-    model = dmodel.ModelConcat(
+    model = dlmodel.ModelConcat(
         embed_feature=2 * embed_feature,
         linear_hidden_feature=64,
         num_attn_head=8,

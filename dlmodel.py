@@ -12,10 +12,11 @@ class ModelConcat(nn.Module):
                  num_attn_head: int = 8,
                  tf_dim_forward: int = 256,
                  num_tf_layer: int = 3,
-                 name: str = "TFModel-Lite"
-                 ):
+                 name: str = "model-concat"
+                 ) -> None:
         super().__init__()
         self.name = name
+        self.loss_function = nn.NLLLoss()
 
         # Layers for pattern Transformer structure.
         self.encoder_pattern = nn.TransformerEncoderLayer(d_model=embed_feature, nhead=num_attn_head,
@@ -123,10 +124,11 @@ class ModelAFF(nn.Module):
                  num_attn_head: int = 8,
                  tf_dim_forward: int = 256,
                  num_tf_layer: int = 3,
-                 name: str = "TFModel-Alter"
-                 ):
+                 name: str = "model-aff"
+                 ) -> None:
         super().__init__()
         self.name = name
+        self.loss_function = nn.NLLLoss()
 
         # Layers for pattern Transformer structure.
         self.encoder_pattern = nn.TransformerEncoderLayer(d_model=embed_feature, nhead=num_attn_head,
