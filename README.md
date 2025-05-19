@@ -28,6 +28,8 @@ To set up the environment, use these codes below:
 
 Note that you need to install PyTorch by yourself because PyTorch provides different packages depending on the device (briefly, GPU version and CPU-only version). Please refer https://pytorch.org/get-started/locally/ and https://pytorch.org/get-started/previous-versions/ to install the proper PyTorch version.
 
+<br>
+
 ### Verification data
 We provide data for verifying the results of our paper in GitHub Releases. To download verification data, run:
 
