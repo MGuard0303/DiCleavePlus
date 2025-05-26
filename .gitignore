@@ -164,6 +164,7 @@ cython_debug/
 expt/
 dataset/
 verify/
+webserver/
 *.tar
 *.gz
 *.tar.gz
