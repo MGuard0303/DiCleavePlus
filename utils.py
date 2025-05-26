@@ -66,10 +66,15 @@ def kmer_embed(inputs: list | np.ndarray, vocab: dict, k: int, is_pad: bool = Fa
         k_tensor = k_tensor.unsqueeze(0)
         k_tensors.append(k_tensor)
 
+    t = torch.cat(k_tensors, dim=0)
+
+    # Deprecated code.
+    """
     t = torch.cat([k_tensors[0], k_tensors[1]], dim=0)
 
     for i in range(2, len(k_tensors)):
         t = torch.cat([t, k_tensors[i]], dim=0)
+    """
 
     return t
 
