@@ -1,4 +1,3 @@
-import os
 from collections import deque
 from pathlib import Path
 
@@ -7,8 +6,15 @@ import torch
 from torch import nn
 
 
-# Obtain k-mer for a given sequence
 def kmer(seq: str, k: int) -> list:
+    """
+    Obtain k-mer for a given sequence.
+
+    :param seq:
+    :param k:
+    :return: A list containing k-mers of the given sequence
+    """
+
     kmers = []
     s_len = len(seq)
     e = s_len - k + 1
@@ -25,8 +31,15 @@ def kmer(seq: str, k: int) -> list:
     return kmers
 
 
-# Pad k-mer string list to designated length
 def pad_kmer(k_mer: list, max_length: int) -> list:
+    """
+    Pad k-mer string list to designated length.
+
+    :param k_mer:
+    :param max_length:
+    :return: A list of padded sequence k-mers.
+    """
+
     length = len(k_mer)
     delta = max_length - length
 
@@ -36,8 +49,16 @@ def pad_kmer(k_mer: list, max_length: int) -> list:
     return k_mer
 
 
-# Convert kmer string list into pytorch Tensor via kmer vocabulary
 def convert_kmer(k_mer: list, vocab: dict, dtype: torch.dtype = None) -> torch.Tensor:
+    """
+    Convert k-mer string list into PyTorch Tensor via k-mer vocabulary.
+
+    :param k_mer:
+    :param vocab:
+    :param dtype:
+    :return: K-mer Tensor
+    """
+
     temp = []
 
     for string in k_mer:
@@ -51,9 +72,20 @@ def convert_kmer(k_mer: list, vocab: dict, dtype: torch.dtype = None) -> torch.T
     return ts_k_mer
 
 
-# Obtain kmer embedding from inputs
 def kmer_embed(inputs: list | np.ndarray, vocab: dict, k: int, is_pad: bool = False, max_length: int = None,
                dtype: torch.dtype = None) -> torch.Tensor:
+    """
+    Obtain k-mer embedding from inputs.
+
+    :param inputs: Sequences list or sequences ndarray
+    :param vocab:
+    :param k:
+    :param is_pad:
+    :param max_length:
+    :param dtype:
+    :return: k-mer Tensor of input sequences
+    """
+
     k_tensors = []
 
     for i in inputs:
@@ -68,20 +100,20 @@ def kmer_embed(inputs: list | np.ndarray, vocab: dict, k: int, is_pad: bool = Fa
 
     t = torch.cat(k_tensors, dim=0)
 
-    # Deprecated code.
-    """
-    t = torch.cat([k_tensors[0], k_tensors[1]], dim=0)
-
-    for i in range(2, len(k_tensors)):
-        t = torch.cat([t, k_tensors[i]], dim=0)
-    """
-
     return t
 
 
-# Separate training set and testing set for a specific fold
-# Return a tuple of (training_tensor, evaluation_tensor)
 def separate_tensor(inputs: torch.Tensor, curr_fold: int, total_fold: int, fold_size: int) -> tuple:
+    """
+    Separate training set and evaluation set for a specific fold.
+
+    :param inputs:
+    :param curr_fold:
+    :param total_fold:
+    :param fold_size:
+    :return: A tuple of (training_tensor, evaluation_tensor)
+    """
+
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     if curr_fold == 0:
         evaluate = inputs[0:fold_size]
@@ -101,8 +133,16 @@ def separate_tensor(inputs: torch.Tensor, curr_fold: int, total_fold: int, fold_
     return train, evaluate
 
 
-# Save model state dictionary to path
 def save_parameter(model: nn.Module, path: str, filename: str) -> None:
+    """
+    Save model state dictionary.
+
+    :param model:
+    :param path:
+    :param filename:
+    :return: None
+    """
+
     path = Path(path)
     if not path.exists():
         path.mkdir(parents=True)

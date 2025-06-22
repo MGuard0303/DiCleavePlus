@@ -6,6 +6,14 @@ from sklearn.metrics import f1_score
 
 # Extended Perfect Match Fraction (PMF), consider negative prediction and negative label.
 def pmf_ext(pred: torch.Tensor, label: torch.Tensor) -> float:
+    """
+    Calculate Extended Perfect Match Fraction (PMF), consider negative prediction and negative label.
+
+    :param pred:
+    :param label:
+    :return: Extended PMF value
+    """
+
     if len(pred) != len(label):
         raise ValueError("The length of prediction tensor and label tensor does not match.")
     else:
@@ -25,8 +33,15 @@ def pmf_ext(pred: torch.Tensor, label: torch.Tensor) -> float:
         return corrected / num
 
 
-# Perfect Match Fraction (PMF), do not consider negative samples for prediction and label.
 def pmf(pred: torch.Tensor, label: torch.Tensor) -> float:
+    """
+    Calculate Perfect Match Fraction (PMF), do not consider negative prediction and negative label.
+
+    :param pred:
+    :param label:
+    :return: PMF value
+    """
+
     if len(pred) != len(label):
         raise ValueError("The length of prediction tensor and label tensor does not match.")
     else:
@@ -48,8 +63,15 @@ def pmf(pred: torch.Tensor, label: torch.Tensor) -> float:
         return corrected / num
 
 
-# Extended Positional Shift Error (PSE), consider negative prediction and negative label.
 def pse_ext(pred: torch.Tensor, label: torch.Tensor) -> float:
+    """
+    Calculate Extended Positional Shift Error (PSE), consider negative prediction and negative label.
+
+    :param pred:
+    :param label:
+    :return: Extended PSE value
+    """
+
     if len(pred) != len(label):
         raise ValueError("The length of prediction tensor and label tensor does not match.")
     else:
@@ -72,8 +94,15 @@ def pse_ext(pred: torch.Tensor, label: torch.Tensor) -> float:
         return sum_delta / num
 
 
-# Extended Positional Shift Error (PSE), consider negative prediction and negative label
 def pse(pred: torch.Tensor, label: torch.Tensor) -> float:
+    """
+    Calculate Positional Shift Error (PSE), do not consider negative prediction and negative label.
+
+    :param pred:
+    :param label:
+    :return: PSE value
+    """
+
     if len(pred) != len(label):
         raise ValueError("The length of prediction tensor and label tensor does not match.")
     else:
@@ -95,9 +124,15 @@ def pse(pred: torch.Tensor, label: torch.Tensor) -> float:
         return sum_delta / num
 
 
-# Metrics for positive-negative binary assessment.
-# Currently return accuracy, specificity, sensitivity, mcc.
 def binary_metric(pred: torch.Tensor, label: torch.Tensor) -> tuple:
+    """
+    Calculate confusion matrix for positive-negative binary assessment.
+
+    :param pred:
+    :param label:
+    :return: A tuple consisting of (accuracy, specificity, sensitivity, mcc)
+    """
+
     if len(pred) != len(label):
         raise ValueError("The length of prediction tensor and label tensor does not match.")
     else:
@@ -132,8 +167,16 @@ def binary_metric(pred: torch.Tensor, label: torch.Tensor) -> tuple:
         return acc, spe, sen, mcc
 
 
-# Calculate top-k accuracy.
 def topk_acc(pred: torch.Tensor, label: torch.Tensor, k: int = 3) -> float:
+    """
+    Calculate top-k accuracy.
+
+    :param pred:
+    :param label:
+    :param k:
+    :return: top-k accuracy value
+    """
+
     if len(pred) != len(label):
         raise ValueError("The length of prediction tensor and label tensor does not match.")
     else:

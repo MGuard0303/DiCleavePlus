@@ -4,8 +4,11 @@ import torch
 from torch import nn
 
 
-# Use concatenation instead of other feature fusion methods.
 class ModelConcat(nn.Module):
+    """
+    DCP models which use concatenation to fuse sequence feature and pattern feature.
+    """
+
     def __init__(self,
                  embed_feature: int,
                  linear_hidden_feature: int = 64,
@@ -116,8 +119,11 @@ class ModelConcat(nn.Module):
         return embed
 
 
-# Same architecture with ModelConcat, using AFF module instead of concatenation operation.
 class ModelAFF(nn.Module):
+    """
+    DCP models which use AFF module to fuse sequence feature and pattern feature.
+    """
+
     def __init__(self,
                  embed_feature: int,
                  linear_hidden_feature: int = 64,
@@ -230,10 +236,16 @@ class ModelAFF(nn.Module):
         return embed
 
 
-# The default input shape is (Length, Batch, Dimension)
-# If batch_first=True, the default input shape is (Batch, Length, Dimension)
-# Output shape is identity with input shape
 class PositionEncoder(nn.Module):
+    """
+    Generate positional embedding for Transformer architecture.
+
+    The default input shape is (Length, Batch, Dimension). If batch_first=True, the default input shape is (Batch,
+    Length, Dimension).
+
+    The output shape is identical with the input shape.
+    """
+
     def __init__(self, d_model: int, length: int, n: float = 10000.0, batch_first: bool = False):
         super().__init__()
         self.batch_first = batch_first
@@ -260,7 +272,6 @@ class PositionEncoder(nn.Module):
         return x
 
 
-# Use Attentional Feature Fusion (AFF) module to fuse two feature.
 class AttentionalFeatureFusionLayer(nn.Module):
     def __init__(self, glo_pool_size: int | tuple, pool_type: str):
         super().__init__()
