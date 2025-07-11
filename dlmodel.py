@@ -316,8 +316,8 @@ class AttentionalFeatureFusionLayer(nn.Module):
 
 class ModelAFF_flex(nn.Module):
     def __init__(self,
-                 pattern_size: int,
                  embed_feature: int,
+                 pattern_size: int,
                  linear_hidden_feature: int = 64,
                  num_attn_head: int = 8,
                  tf_dim_forward: int = 256,
@@ -454,8 +454,8 @@ class ModelAFF_flex(nn.Module):
 
 class ModelConcat_flex(nn.Module):
     def __init__(self,
-                 pattern_size: int,
                  embed_feature: int,
+                 pattern_size: int,
                  linear_hidden_feature: int = 64,
                  num_attn_head: int = 8,
                  tf_dim_forward: int = 256,
