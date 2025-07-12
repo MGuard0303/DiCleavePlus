@@ -4,16 +4,10 @@ import torch
 from sklearn.metrics import f1_score
 
 
+"""
+# DEPRECATED
 # Extended Perfect Match Fraction (PMF), consider negative prediction and negative label.
 def pmf_ext(pred: torch.Tensor, label: torch.Tensor) -> float:
-    """
-    Calculate Extended Perfect Match Fraction (PMF), consider negative prediction and negative label.
-
-    :param pred:
-    :param label:
-    :return: Extended PMF value
-    """
-
     if len(pred) != len(label):
         raise ValueError("The length of prediction tensor and label tensor does not match.")
     else:
@@ -31,6 +25,7 @@ def pmf_ext(pred: torch.Tensor, label: torch.Tensor) -> float:
                 corrected += 1
 
         return corrected / num
+"""
 
 
 def pmf(pred: torch.Tensor, label: torch.Tensor) -> float:
@@ -63,15 +58,9 @@ def pmf(pred: torch.Tensor, label: torch.Tensor) -> float:
         return corrected / num
 
 
+"""
+# DEPRECATED
 def pse_ext(pred: torch.Tensor, label: torch.Tensor) -> float:
-    """
-    Calculate Extended Positional Shift Error (PSE), consider negative prediction and negative label.
-
-    :param pred:
-    :param label:
-    :return: Extended PSE value
-    """
-
     if len(pred) != len(label):
         raise ValueError("The length of prediction tensor and label tensor does not match.")
     else:
@@ -92,6 +81,7 @@ def pse_ext(pred: torch.Tensor, label: torch.Tensor) -> float:
                 sum_delta += delta
 
         return sum_delta / num
+"""
 
 
 def pse(pred: torch.Tensor, label: torch.Tensor) -> float:

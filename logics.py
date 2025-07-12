@@ -3,7 +3,6 @@ import copy
 import torch
 
 from torch.utils.data import DataLoader
-from tqdm import tqdm
 
 import metrics
 import utils
@@ -51,7 +50,6 @@ def train(model: torch.nn.Module, train_loader: DataLoader, valid_loader: DataLo
         # Training step
         trn_steps = len(train_loader)
 
-        # for _, (seq, patt, lbl) in enumerate(tqdm(train_loader)):  # For user
         for _, (seq, patt, lbl) in enumerate(train_loader):
             lbl = lbl.squeeze(1)  # The shape of NLLLoss label is (N)
             lbl = lbl.type(torch.long)
@@ -69,7 +67,6 @@ def train(model: torch.nn.Module, train_loader: DataLoader, valid_loader: DataLo
 
             vld_steps = len(valid_loader)
 
-            # for _, (seq, patt, lbl) in enumerate(tqdm(valid_loader)):  # For user
             for _, (seq, patt, lbl) in enumerate(valid_loader):
                 lbl = lbl.squeeze(1)  # The shape of NLLLoss label is (N)
                 lbl = lbl.type(torch.long)
@@ -112,7 +109,6 @@ def evaluate(model: torch.nn.Module, eval_loader: DataLoader, returns: bool = Fa
 
     eval_steps = len(eval_loader)
 
-    # for _, (seq, patt, lbl) in enumerate(tqdm(eval_loader)):  # For user
     for _, (seq, patt, lbl) in enumerate(eval_loader):
         lbl = lbl.squeeze(1)  # The shape of NLLLoss label is (N)
         lbl = lbl.type(torch.long)
@@ -134,22 +130,25 @@ def evaluate(model: torch.nn.Module, eval_loader: DataLoader, returns: bool = Fa
     eval_pred = torch.tensor(eval_pred_ls)
     eval_lbl = torch.tensor(eval_lbl_ls)
 
-    pmf_ext = metrics.pmf_ext(eval_pred, eval_lbl)
-    pse_ext = metrics.pse_ext(eval_pred, eval_lbl)
-    pmf = metrics.pmf(eval_pred, eval_lbl)
-    pse = metrics.pse(eval_pred, eval_lbl)
+    top1_acc = metrics.topk_acc(pred=eval_pred, label=eval_lbl, k=1)
     macro_f1 = metrics.multi_f1(pred=eval_pred, label=eval_lbl, average="macro")
     weighted_f1 = metrics.multi_f1(pred=eval_pred, label=eval_lbl, average="weighted")
-    topk_acc = metrics.topk_acc(eval_pred, eval_lbl, k=3)
+    top3_acc = metrics.topk_acc(eval_pred, eval_lbl, k=3)
+
+    pmf = metrics.pmf(eval_pred, eval_lbl)
+    pse = metrics.pse(eval_pred, eval_lbl)
+
     binary_acc, binary_spe, binary_sen, binary_mcc = metrics.binary_metric(eval_pred, eval_lbl)
 
     # Print evaluation result
     print(f"Evaluate {model.name}")
     print(f"| Average Evaluation Loss: {avg_eval_loss:.3f} |")
-    print(f"| PMF-Ext: {pmf_ext:.3f} | PSE-Ext: {pse_ext:.3f} |")
-    print(f"| PMF: {pmf:.3f} | PSE: {pse:.3f} |")
+    print(f"| Top-1 Accuracy: {top1_acc:.3f} |")
     print(f"| Macro F1 Score: {macro_f1:.3f} | Weighted F1 Score: {weighted_f1:.3f} |")
-    print(f"| Top-k Accuracy: {topk_acc:.3f} |")
+    print(f"| Top-3 Accuracy: {top3_acc:.3f} |")
+
+    print(f"| PMF: {pmf:.3f} | PSE: {pse:.3f} |")
+
     print(f"PN Binary Performance")
     print(f"| Accuracy: {binary_acc:.3f} | Specificity: {binary_spe:.3f} | Sensitivity: {binary_sen:.3f} | "
           f"MCC: {binary_mcc:.3f} |")

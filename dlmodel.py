@@ -119,7 +119,7 @@ class ModelConcat(nn.Module):
         return embed
 
 
-class ModelAFF(nn.Module):
+class ModelAff(nn.Module):
     """
     DCP models which use AFF module to fuse sequence feature and pattern feature.
     """
@@ -314,15 +314,15 @@ class AttentionalFeatureFusionLayer(nn.Module):
         return fused, w
 
 
-class ModelAFF_flex(nn.Module):
+class ModelAffFlex(nn.Module):
     def __init__(self,
                  embed_feature: int,
                  pattern_size: int,
-                 linear_hidden_feature: int = 64,
                  num_attn_head: int = 8,
-                 tf_dim_forward: int = 256,
-                 num_tf_layer: int = 3,
-                 name: str = "model-aff"
+                 tf_dim_forward: int = 512,
+                 num_tf_layer: int = 4,
+                 linear_hidden_feature: int = 128,
+                 name: str = "Model-AFF"
                  ) -> None:
 
         super().__init__()
@@ -452,15 +452,15 @@ class ModelAFF_flex(nn.Module):
         return embed
 
 
-class ModelConcat_flex(nn.Module):
+class ModelConcatFlex(nn.Module):
     def __init__(self,
                  embed_feature: int,
                  pattern_size: int,
-                 linear_hidden_feature: int = 64,
                  num_attn_head: int = 8,
-                 tf_dim_forward: int = 256,
-                 num_tf_layer: int = 3,
-                 name: str = "model-concat"
+                 tf_dim_forward: int = 512,
+                 num_tf_layer: int = 4,
+                 linear_hidden_feature: int = 128,
+                 name: str = "Model-Concat"
                  ) -> None:
 
         super().__init__()
