@@ -320,7 +320,7 @@ class ModelAffFlex(nn.Module):
                  pattern_size: int,
                  num_attn_head: int = 8,
                  tf_dim_forward: int = 512,
-                 num_tf_layer: int = 4,
+                 num_tf_layer: int = 3,
                  linear_hidden_feature: int = 128,
                  name: str = "Model-AFF"
                  ) -> None:
@@ -458,7 +458,7 @@ class ModelConcatFlex(nn.Module):
                  pattern_size: int,
                  num_attn_head: int = 8,
                  tf_dim_forward: int = 512,
-                 num_tf_layer: int = 4,
+                 num_tf_layer: int = 3,
                  linear_hidden_feature: int = 128,
                  name: str = "Model-Concat"
                  ) -> None:
