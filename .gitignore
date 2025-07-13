@@ -168,6 +168,5 @@ webserver/
 *.tar
 *.gz
 *.tar.gz
-eval.py
 dc.py
 plot.py
