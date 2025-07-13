@@ -87,7 +87,7 @@ for fold in range(1, 6):
 
     # Save evaluation data for each fold.
     timestamp = datetime.datetime.now().strftime("%H%M%S")
-    save_path = Path(f"expt/{date}/{task}")
+    save_path = Path(f"expt/{date}/{task}/epoch_{epoch_size}")
 
     if not save_path.exists():
         save_path.mkdir(parents=True)
