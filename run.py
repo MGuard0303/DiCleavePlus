@@ -41,7 +41,7 @@ for fold in range(1, 6):
     sec_trn, sec_eval = utils.separate_tensor(inputs=pp["sec"], curr_fold=fold - 1, total_fold=5, fold_size=fold_size)
     patt_trn, patt_eval = utils.separate_tensor(inputs=pp["pattern"], curr_fold=fold-1, total_fold=5,
                                                 fold_size=fold_size)
-    patt_sec_trn, patt_sec_eval = utils.separate_tensor(inputs=pp["patt_sec"], curr_fold=fold - 1, total_fold=5,
+    patt_sec_trn, patt_sec_eval = utils.separate_tensor(inputs=pp["pattern_sec"], curr_fold=fold - 1, total_fold=5,
                                                         fold_size=fold_size)
     lbl2_trn, lbl2_eval = utils.separate_tensor(inputs=pp["label2"], curr_fold=fold - 1, total_fold=5,
                                                 fold_size=fold_size)
