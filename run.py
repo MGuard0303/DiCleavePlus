@@ -14,20 +14,20 @@ import utils
 
 # Hyper parameters.
 date = datetime.datetime.now().strftime("%Y%m%d")
-task = "aff_14_1"  # "model type, pattern size, dataset type".
+task = "aff_14_2"  # "model type, pattern size, dataset type".
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 pattern_size = 14
 epoch_size = 25
 
 
 # Load dataset and separate data for k-fold.
-dataset_path = "dataset/luna/human/dataset_14_1.csv"
+dataset_path = "dataset/luna/human/dataset_14_2.csv"
 df = pd.read_csv(dataset_path)
 fold_size, _ = divmod(len(df), 5)
 
 # Load pre-precessed data.
-with open("dataset/luna/human/preprocessed_14_1.pkl", "rb") as f:
-    pp = pickle.load(f)
+with open("dataset/luna/human/preprocessed_14_2.pkl", "rb") as f:
+    preprocessed = pickle.load(f)
 
 embed_feature = 32
 
@@ -36,14 +36,16 @@ embedding_layer_sec = torch.nn.Embedding(num_embeddings=40, embedding_dim=embed_
 
 for fold in range(1, 6):
     # Get training data and evaluation data.
-    seq_trn, seq_eval = utils.separate_tensor(inputs=pp["sequence"], curr_fold=fold-1, total_fold=5,
+    seq_trn, seq_eval = utils.separate_tensor(inputs=preprocessed["sequence"], curr_fold=fold - 1, total_fold=5,
                                               fold_size=fold_size)
-    sec_trn, sec_eval = utils.separate_tensor(inputs=pp["sec"], curr_fold=fold - 1, total_fold=5, fold_size=fold_size)
-    patt_trn, patt_eval = utils.separate_tensor(inputs=pp["pattern"], curr_fold=fold-1, total_fold=5,
+    sec_trn, sec_eval = utils.separate_tensor(inputs=preprocessed["sec"], curr_fold=fold - 1, total_fold=5,
+                                              fold_size=fold_size)
+    patt_trn, patt_eval = utils.separate_tensor(inputs=preprocessed["pattern"], curr_fold=fold - 1, total_fold=5,
                                                 fold_size=fold_size)
-    patt_sec_trn, patt_sec_eval = utils.separate_tensor(inputs=pp["pattern_sec"], curr_fold=fold - 1, total_fold=5,
+    patt_sec_trn, patt_sec_eval = utils.separate_tensor(inputs=preprocessed["pattern_sec"], curr_fold=fold - 1,
+                                                        total_fold=5,
                                                         fold_size=fold_size)
-    lbl2_trn, lbl2_eval = utils.separate_tensor(inputs=pp["label2"], curr_fold=fold - 1, total_fold=5,
+    lbl2_trn, lbl2_eval = utils.separate_tensor(inputs=preprocessed["label2"], curr_fold=fold - 1, total_fold=5,
                                                 fold_size=fold_size)
 
     seq_trn = embedding_layer_seq(seq_trn)
