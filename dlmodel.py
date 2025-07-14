@@ -15,7 +15,7 @@ class ModelConcat(nn.Module):
                  num_attn_head: int = 8,
                  tf_dim_forward: int = 256,
                  num_tf_layer: int = 3,
-                 name: str = "model-concat"
+                 name: str = "Model-Concat"
                  ) -> None:
         super().__init__()
         self.name = name
@@ -126,11 +126,11 @@ class ModelAff(nn.Module):
 
     def __init__(self,
                  embed_feature: int,
-                 linear_hidden_feature: int = 64,
                  num_attn_head: int = 8,
                  tf_dim_forward: int = 256,
                  num_tf_layer: int = 3,
-                 name: str = "model-aff"
+                 linear_hidden_feature: int = 64,
+                 name: str = "Model-AFF"
                  ) -> None:
         super().__init__()
         self.name = name
@@ -322,7 +322,7 @@ class ModelAffFlex(nn.Module):
                  tf_dim_forward: int = 512,
                  num_tf_layer: int = 3,
                  linear_hidden_feature: int = 128,
-                 name: str = "Model-AFF"
+                 name: str = "Model-AFF-Flex"
                  ) -> None:
 
         super().__init__()
@@ -460,7 +460,7 @@ class ModelConcatFlex(nn.Module):
                  tf_dim_forward: int = 512,
                  num_tf_layer: int = 3,
                  linear_hidden_feature: int = 128,
-                 name: str = "Model-Concat"
+                 name: str = "Model-Concat-Flex"
                  ) -> None:
 
         super().__init__()
