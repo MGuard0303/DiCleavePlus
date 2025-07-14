@@ -46,7 +46,6 @@ for fold in range(1, 6):
         )
 
         loss_fn_weight = torch.ones(14)
-        loss_fn_weight[0] = 0.05
         model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight)
 
         model.load_state_dict(torch.load(param, map_location=device))
