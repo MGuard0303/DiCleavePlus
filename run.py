@@ -15,6 +15,7 @@ import utils
 # Hyper parameters.
 date = datetime.datetime.now().strftime("%Y%m%d")
 task = "aff_14_2"  # "model type, pattern size, dataset type".
+expt_no = 1
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 pattern_size = 14
 epoch_size = 25
@@ -89,7 +90,7 @@ for fold in range(1, 6):
 
     # Save evaluation data for each fold.
     timestamp = datetime.datetime.now().strftime("%H%M%S")
-    save_path = Path(f"expt/{date}/{task}/epoch_{epoch_size}")
+    save_path = Path(f"expt/{date}/{task}/epoch_{epoch_size}/{expt_no}")
 
     if not save_path.exists():
         save_path.mkdir(parents=True)
