@@ -100,7 +100,7 @@ for fold in range(1, 6):
 
     # Initial model
     model = dlmodel.ModelAffFlex(
-        embed_feature=2*embed_feature,
+        embed_feature=2 * embed_feature,
         pattern_size=pattern_size,
         num_attn_head=8,
         tf_dim_forward=512,
