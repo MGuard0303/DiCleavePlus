@@ -39,7 +39,7 @@ def train(model: torch.nn.Module, train_loader: DataLoader, valid_loader: DataLo
           valid_per_epochs: int, is_return: bool = False) -> tuple:
     print(f"Model {model.name}: Start training...")
 
-    tolerance = 2
+    tolerance = 3
     count = 0
     m_queue = utils.ModelQ(3)  # Save top-3 model parameters
     best_vld_loss = float("inf")
