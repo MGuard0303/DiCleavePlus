@@ -18,7 +18,7 @@ task = "aff_f_14_2"  # "model type, pattern size, dataset type".
 expt_no = 1
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 pattern_size = 14
-epoch_size = 50
+epoch_size = 25
 
 
 # Load dataset and separate data for k-fold.
@@ -108,9 +108,9 @@ for fold in range(1, 6):
         linear_hidden_feature=128,
     )
     loss_fn_weight = torch.ones(pattern_size)
-    loss_fn_weight[0] = 3
+    loss_fn_weight[0] = 5
     model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight.to(device))
-    model.optimizer = torch.optim.AdamW(model.parameters(), lr=0.005, weight_decay=1e-5)
+    model.optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
     model.to(device)
 
     # Training setup.
