@@ -44,7 +44,11 @@ for fold in range(1, 6):
             embed_feature=2*32,
             pattern_size=14
         )
-        model.loss_function = torch.nn.NLLLoss()
+
+        loss_fn_weight = torch.ones(14)
+        loss_fn_weight[0] = 0.05
+        model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight)
+
         model.load_state_dict(torch.load(param, map_location=device))
         model.to(device)
         logics.evaluate(model=model, eval_loader=dl_eval[fold-1])
