@@ -95,8 +95,8 @@ for fold in range(1, 6):
     if not save_path.exists():
         save_path.mkdir(parents=True)
 
-    with open(f"{save_path}/dl_eval_fold{fold}_{timestamp}.pkl", "wb") as f:
-        pickle.dump(dl_eval, f)
+    # with open(f"{save_path}/dl_eval_fold{fold}_{timestamp}.pkl", "wb") as f:
+        # pickle.dump(dl_eval, f)
 
     # Initial model
     model = dlmodel.ModelAffFlex(
@@ -119,12 +119,12 @@ for fold in range(1, 6):
                                           valid_per_epochs=1, is_return=True)
 
     # Save model parameters.
-    for idx, mdl in enumerate(model_queue.queue, start=1):
-        timestamp = datetime.datetime.now().strftime("%H%M%S")
-        mdl.name = f"model{idx}_fold{fold}_{timestamp}"
-        utils.save_parameter(model=mdl, path=f"{save_path}", filename=f"{mdl.name}.pt")
+    # for idx, mdl in enumerate(model_queue.queue, start=1):
+        # timestamp = datetime.datetime.now().strftime("%H%M%S")
+        # mdl.name = f"model{idx}_fold{fold}_{timestamp}"
+        # utils.save_parameter(model=mdl, path=f"{save_path}", filename=f"{mdl.name}.pt")
 
     # Save final model parameters each fold.
-    timestamp = datetime.datetime.now().strftime("%H%M%S")
-    model_fnl.name = f"model_fnl_fold{fold}_{timestamp}"
-    utils.save_parameter(model=model_fnl, path=f"{save_path}", filename=f"{model_fnl.name}.pt")
+    # timestamp = datetime.datetime.now().strftime("%H%M%S")
+    # model_fnl.name = f"model_fnl_fold{fold}_{timestamp}"
+    # utils.save_parameter(model=model_fnl, path=f"{save_path}", filename=f"{model_fnl.name}.pt")
