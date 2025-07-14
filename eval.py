@@ -10,22 +10,22 @@ import logics
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Evaluation for DiCleavePlus.
-data_path = Path("expt/20250713/aff_f_14_2/epoch_25/1")
-param_path = Path("expt/20250713/aff_f_14_2/epoch_25/1")
+data_path = Path("expt/20250713/aff_f_14_2/epoch_25/2")
+param_path = Path("expt/20250713/aff_f_14_2/epoch_25/2")
 
-with open(f"{data_path}/dl_eval_fold1_144440.pkl", "rb") as f:
+with open(f"{data_path}/dl_eval_fold1_204519.pkl", "rb") as f:
     dl_eval_fold1 = pickle.load(f)
     
-with open(f"{data_path}/dl_eval_fold2_154744.pkl", "rb") as f:
+with open(f"{data_path}/dl_eval_fold2_214542.pkl", "rb") as f:
     dl_eval_fold2 = pickle.load(f)
     
-with open(f"{data_path}/dl_eval_fold3_165046.pkl", "rb") as f:
+with open(f"{data_path}/dl_eval_fold3_224610.pkl", "rb") as f:
     dl_eval_fold3 = pickle.load(f)
     
-with open(f"{data_path}/dl_eval_fold4_175351.pkl", "rb") as f:
+with open(f"{data_path}/dl_eval_fold4_234638.pkl", "rb") as f:
     dl_eval_fold4 = pickle.load(f)
     
-with open(f"{data_path}/dl_eval_fold5_185653.pkl", "rb") as f:
+with open(f"{data_path}/dl_eval_fold5_004746.pkl", "rb") as f:
     dl_eval_fold5 = pickle.load(f)
     
 dl_eval = [dl_eval_fold1, dl_eval_fold2, dl_eval_fold3, dl_eval_fold4, dl_eval_fold5]

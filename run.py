@@ -108,9 +108,9 @@ for fold in range(1, 6):
         linear_hidden_feature=128,
     )
     loss_fn_weight = torch.ones(pattern_size)
-    loss_fn_weight[0] = 0.05
+    loss_fn_weight[0] = 5
     model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight.to(device))
-    model.optimizer = torch.optim.AdamW(model.parameters(), lr=0.001, weight_decay=1e-5)
+    model.optimizer = torch.optim.AdamW(model.parameters(), lr=0.005, weight_decay=1e-5)
     model.to(device)
 
     # Training setup.
