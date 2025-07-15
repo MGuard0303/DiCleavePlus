@@ -112,14 +112,14 @@ for fold in range(1, 6):
     # loss_fn_weight[0] = 0.1
     # model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight.to(device))
     model.loss_function = torch.nn.NLLLoss()
-    model.optimizer = torch.optim.AdamW(model.parameters(), lr=0.02, weight_decay=1e-5)
+    model.optimizer = torch.optim.AdamW(model.parameters(), lr=0.01, weight_decay=1e-5)
 
     model.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer=model.optimizer,
         mode="min",
         factor=0.5,
         patience=5,
-        min_lr=0.0005
+        min_lr=0.001
     )
 
     model.to(device)
