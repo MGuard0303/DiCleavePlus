@@ -14,7 +14,7 @@ import utils
 
 # Hyper parameters.
 date = datetime.datetime.now().strftime("%Y%m%d")
-task = "aff_f_14_2"  # "model type, pattern size, dataset type".
+task = "aff_14_2"  # "model type, pattern size, dataset type".
 expt_no = 1
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 pattern_size = 14
@@ -99,9 +99,9 @@ for fold in range(1, 6):
         pickle.dump(dl_eval, f)
 
     # Initial model
-    model = dlmodel.ModelAffFlex(
+    model = dlmodel.ModelAff(
         embed_feature=2 * embed_feature,
-        pattern_size=pattern_size,
+        # pattern_size=pattern_size,
         num_attn_head=8,
         tf_dim_forward=256,
         num_tf_layer=3,
