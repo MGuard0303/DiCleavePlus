@@ -76,6 +76,9 @@ def train(model: torch.nn.Module, train_loader: DataLoader, valid_loader: DataLo
 
             avg_vld_loss = vld_loss / vld_steps
 
+            # Learning rate scheduler update.
+            # model.scheduler.step(avg_vld_loss)
+
             print(f"| Average Validation Loss: {avg_vld_loss:.3f} |")
 
             # Use validation loss to select best model.

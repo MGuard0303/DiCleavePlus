@@ -15,7 +15,7 @@ import utils
 # Hyper parameters.
 date = datetime.datetime.now().strftime("%Y%m%d")
 task = "aff_f_14_2"  # "model type, pattern size, dataset type".
-expt_no = 4
+expt_no = 5
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 pattern_size = 14
 epoch_size = 30
@@ -108,11 +108,20 @@ for fold in range(1, 2):
         num_tf_layer=3,
         linear_hidden_feature=64,
     )
-    # loss_fn_weight = torch.ones(pattern_size)
-    # loss_fn_weight[0] = 2
-    # model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight.to(device))
-    model.loss_function = torch.nn.NLLLoss()
+    loss_fn_weight = torch.ones(pattern_size)
+    loss_fn_weight[0] = 0.5
+    model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight.to(device))
+    # model.loss_function = torch.nn.NLLLoss()
     model.optimizer = torch.optim.AdamW(model.parameters(), lr=0.001, weight_decay=1e-5)
+
+    # model.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        # optimizer=model.optimizer,
+        # mode="min",
+        # factor=0.5,
+        # patience=5,
+        # min_lr=0.0005
+    # )
+
     model.to(device)
 
     # Training setup.
