@@ -411,7 +411,7 @@ class ModelAffFlex(nn.Module):
         )
 
         self.output_layer = nn.Sequential(
-            nn.Linear(in_features=32, out_features=14),
+            nn.Linear(in_features=32, out_features=pattern_size),
             nn.LogSoftmax(dim=1)
         )
 
@@ -547,7 +547,7 @@ class ModelConcatFlex(nn.Module):
         )
 
         self.output_layer = nn.Sequential(
-            nn.Linear(in_features=32, out_features=14),
+            nn.Linear(in_features=32, out_features=pattern_size),
             nn.LogSoftmax(dim=1)
         )
 
