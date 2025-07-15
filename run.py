@@ -15,10 +15,10 @@ import utils
 # Hyper parameters.
 date = datetime.datetime.now().strftime("%Y%m%d")
 task = "aff_f_14_2"  # "model type, pattern size, dataset type".
-expt_no = 6
+expt_no = 7
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 pattern_size = 14
-epoch_size = 30
+epoch_size = 100
 
 
 # Load dataset and separate data for k-fold.
@@ -35,8 +35,8 @@ embed_feature = 16
 embedding_layer_seq = torch.nn.Embedding(num_embeddings=85, embedding_dim=embed_feature, padding_idx=0).to(device)
 embedding_layer_sec = torch.nn.Embedding(num_embeddings=40, embedding_dim=embed_feature, padding_idx=0).to(device)
 
-# for fold in range(1, 6):
-for fold in range(1, 2):
+for fold in range(1, 6):
+# for fold in range(1, 2):
     # Get training data and evaluation data.
     seq_trn, seq_eval = utils.separate_tensor(inputs=preprocessed["sequence"], curr_fold=fold - 1, total_fold=5,
                                               fold_size=fold_size)
@@ -108,19 +108,19 @@ for fold in range(1, 2):
         num_tf_layer=3,
         linear_hidden_feature=64,
     )
-    loss_fn_weight = torch.ones(pattern_size)
-    loss_fn_weight[0] = 0.1
-    model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight.to(device))
-    # model.loss_function = torch.nn.NLLLoss()
-    model.optimizer = torch.optim.AdamW(model.parameters(), lr=0.001, weight_decay=1e-5)
+    # loss_fn_weight = torch.ones(pattern_size)
+    # loss_fn_weight[0] = 0.1
+    # model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight.to(device))
+    model.loss_function = torch.nn.NLLLoss()
+    model.optimizer = torch.optim.AdamW(model.parameters(), lr=0.02, weight_decay=1e-5)
 
-    # model.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        # optimizer=model.optimizer,
-        # mode="min",
-        # factor=0.5,
-        # patience=5,
-        # min_lr=0.0005
-    # )
+    model.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer=model.optimizer,
+        mode="min",
+        factor=0.5,
+        patience=5,
+        min_lr=0.0005
+    )
 
     model.to(device)
 
