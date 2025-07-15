@@ -630,7 +630,6 @@ class DC(nn.Module):
 
         super().__init__()
 
-        self.task = task
         self.name = "DC"
 
         self.identity = nn.Sequential()
