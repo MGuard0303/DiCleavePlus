@@ -37,7 +37,7 @@ def pmf(pred: torch.Tensor, label: torch.Tensor) -> float:
     :return: PMF value
     """
 
-    if len(pred) != len(label):
+    if pred.size(0) != label.size(0):
         raise ValueError("The length of prediction tensor and label tensor does not match.")
     else:
         pred = pred.detach()
@@ -47,7 +47,7 @@ def pmf(pred: torch.Tensor, label: torch.Tensor) -> float:
         label = label.detach()
 
         corrected = 0
-        num = len(pred)
+        num = pred.size(0)
 
         for i in range(num):
             if label_pred[i] == 0 or label[i] == 0:
@@ -55,7 +55,10 @@ def pmf(pred: torch.Tensor, label: torch.Tensor) -> float:
             elif label_pred[i].item() == label[i].item():
                 corrected += 1
 
-        return corrected / num
+        if num == 0:
+            return 0
+        else:
+            return corrected / num
 
 
 """
@@ -93,14 +96,14 @@ def pse(pred: torch.Tensor, label: torch.Tensor) -> float:
     :return: PSE value
     """
 
-    if len(pred) != len(label):
+    if pred.size(0) != label.size(0):
         raise ValueError("The length of prediction tensor and label tensor does not match.")
     else:
         pred = pred.detach()
         pred = torch.exp(pred)
         label = label.detach()
         sum_delta = 0
-        num = len(pred)
+        num = pred.size(0)
 
         _, label_pred = torch.max(pred, dim=1)
 
@@ -111,7 +114,10 @@ def pse(pred: torch.Tensor, label: torch.Tensor) -> float:
                 delta = abs(label_pred[i].item() - label[i].item())
                 sum_delta += delta
 
-        return sum_delta / num
+        if num == 0:
+            return torch.inf
+        else:
+            return sum_delta / num
 
 
 def binary_metric(pred: torch.Tensor, label: torch.Tensor) -> tuple:
