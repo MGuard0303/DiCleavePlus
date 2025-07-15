@@ -14,11 +14,11 @@ import utils
 
 # Hyper parameters.
 date = datetime.datetime.now().strftime("%Y%m%d")
-task = "aff_14_2"  # "model type, pattern size, dataset type".
+task = "aff_f_14_2"  # "model type, pattern size, dataset type".
 expt_no = 1
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 pattern_size = 14
-epoch_size = 20
+epoch_size = 30
 
 
 # Load dataset and separate data for k-fold.
@@ -30,12 +30,13 @@ fold_size, _ = divmod(len(df), 5)
 with open("dataset/luna/human/preprocessed_14_2.pkl", "rb") as f:
     preprocessed = pickle.load(f)
 
-embed_feature = 32
+embed_feature = 16
 
 embedding_layer_seq = torch.nn.Embedding(num_embeddings=85, embedding_dim=embed_feature, padding_idx=0).to(device)
 embedding_layer_sec = torch.nn.Embedding(num_embeddings=40, embedding_dim=embed_feature, padding_idx=0).to(device)
 
-for fold in range(1, 6):
+# for fold in range(1, 6):
+for fold in range(1, 2):
     # Get training data and evaluation data.
     seq_trn, seq_eval = utils.separate_tensor(inputs=preprocessed["sequence"], curr_fold=fold - 1, total_fold=5,
                                               fold_size=fold_size)
@@ -84,9 +85,9 @@ for fold in range(1, 6):
     ds_vld = TensorDataset(sequence_vld, pattern_vld, lbl_vld)
     ds_eval = TensorDataset(sequence_eval, pattern_eval, lbl2_eval)
 
-    dl_trn = DataLoader(ds_trn, batch_size=256, shuffle=True)
-    dl_vld = DataLoader(ds_vld, batch_size=256, shuffle=True)
-    dl_eval = DataLoader(ds_eval, batch_size=256, shuffle=False)
+    dl_trn = DataLoader(ds_trn, batch_size=128, shuffle=True)
+    dl_vld = DataLoader(ds_vld, batch_size=128, shuffle=True)
+    dl_eval = DataLoader(ds_eval, batch_size=128, shuffle=False)
 
     # Save evaluation data for each fold.
     timestamp = datetime.datetime.now().strftime("%H%M%S")
@@ -99,9 +100,9 @@ for fold in range(1, 6):
         pickle.dump(dl_eval, f)
 
     # Initial model
-    model = dlmodel.ModelAff(
+    model = dlmodel.ModelAffFlex(
         embed_feature=2 * embed_feature,
-        # pattern_size=pattern_size,
+        pattern_size=pattern_size,
         num_attn_head=8,
         tf_dim_forward=256,
         num_tf_layer=3,
@@ -110,7 +111,7 @@ for fold in range(1, 6):
     loss_fn_weight = torch.ones(pattern_size)
     loss_fn_weight[0] = 5
     model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight.to(device))
-    model.optimizer = torch.optim.AdamW(model.parameters(), lr=0.002, weight_decay=1e-5)
+    model.optimizer = torch.optim.AdamW(model.parameters(), lr=0.001, weight_decay=1e-5)
     model.to(device)
 
     # Training setup.
