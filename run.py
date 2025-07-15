@@ -15,7 +15,7 @@ import utils
 # Hyper parameters.
 date = datetime.datetime.now().strftime("%Y%m%d")
 task = "aff_f_14_2"  # "model type, pattern size, dataset type".
-expt_no = 3
+expt_no = 4
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 pattern_size = 14
 epoch_size = 30
@@ -108,9 +108,10 @@ for fold in range(1, 2):
         num_tf_layer=3,
         linear_hidden_feature=64,
     )
-    loss_fn_weight = torch.ones(pattern_size)
-    loss_fn_weight[0] = 2
-    model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight.to(device))
+    # loss_fn_weight = torch.ones(pattern_size)
+    # loss_fn_weight[0] = 2
+    # model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight.to(device))
+    model.loss_function = torch.nn.NLLLoss()
     model.optimizer = torch.optim.AdamW(model.parameters(), lr=0.001, weight_decay=1e-5)
     model.to(device)
 
