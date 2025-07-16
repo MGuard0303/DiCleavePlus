@@ -30,7 +30,7 @@ fold_size, _ = divmod(len(df), 5)
 with open("dataset/luna/human/preprocessed_14_2.pkl", "rb") as f:
     preprocessed = pickle.load(f)
 
-embed_feature = 16
+embed_feature = 32
 
 embedding_layer_seq = torch.nn.Embedding(num_embeddings=85, embedding_dim=embed_feature, padding_idx=0).to(device)
 embedding_layer_sec = torch.nn.Embedding(num_embeddings=40, embedding_dim=embed_feature, padding_idx=0).to(device)
@@ -108,10 +108,10 @@ for fold in range(1, 6):
         num_tf_layer=3,
         linear_hidden_feature=64,
     )
-    loss_fn_weight = torch.ones(pattern_size)
-    loss_fn_weight[0] = 0.5
-    model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight.to(device))
-    # model.loss_function = torch.nn.NLLLoss()
+    # loss_fn_weight = torch.ones(pattern_size)
+    # loss_fn_weight[0] = 0.5
+    # model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight.to(device))
+    model.loss_function = torch.nn.NLLLoss()
     model.optimizer = torch.optim.AdamW(model.parameters(), lr=0.001, weight_decay=1e-5)
 
     model.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
