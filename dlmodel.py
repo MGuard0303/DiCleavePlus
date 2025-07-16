@@ -4,11 +4,8 @@ import torch
 from torch import nn
 
 
+"""
 class ModelAff(nn.Module):
-    """
-    DCP models which use AFF module to fuse sequence feature and pattern feature.
-    """
-
     def __init__(self,
                  embed_feature: int,
                  num_attn_head: int = 8,
@@ -119,13 +116,11 @@ class ModelAff(nn.Module):
         embed = self.output_layer(embed)
 
         return embed
+"""
 
 
+"""
 class ModelConcat(nn.Module):
-    """
-    DCP models which use concatenation to fuse sequence feature and pattern feature.
-    """
-
     def __init__(self,
                  embed_feature: int,
                  num_attn_head: int = 8,
@@ -234,9 +229,7 @@ class ModelConcat(nn.Module):
         embed = self.output_layer(embed)
 
         return embed
-
-
-
+"""
 
 
 class PositionEncoder(nn.Module):
@@ -356,7 +349,7 @@ class ModelAffFlex(nn.Module):
             nn.LeakyReLU()
         )
 
-        # Layers for sequence Transformer structure
+        # Layers for sequence Transformer structure.
         self.encoder_sequence = nn.TransformerEncoderLayer(d_model=embed_feature, nhead=num_attn_head,
                                                            dim_feedforward=tf_dim_forward, batch_first=True)
 
@@ -415,7 +408,7 @@ class ModelAffFlex(nn.Module):
             nn.LogSoftmax(dim=1)
         )
 
-    # Shape of inputs is (Batch, Length, Dimension)
+    # Shape of inputs is (Batch, Length, Dimension).
     def forward(self, sequence: torch.Tensor, pattern: torch.Tensor) -> torch.Tensor:
         # Forward process of pattern feature.
         pattern = self.position_encoder_pattern(pattern)  # Output size: (B, L, D)
@@ -715,3 +708,245 @@ class DC(nn.Module):
         x_embed = self.mul_unit(x_embed)
 
         return x_embed
+
+
+class AblationModelMLP(nn.Module):
+    def __init__(self,
+                 embed_feature: int,
+                 pattern_size: int,
+                 linear_hidden_feature: int = 128,
+                 name: str = "Ablation-Model-MLP"
+                 ) -> None:
+
+        super().__init__()
+
+        self.name = name
+        self.loss_function = nn.NLLLoss()
+
+        # MLP layers for pattern feature.
+        self.mlp_pattern = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(in_features=pattern_size * embed_feature, out_features=pattern_size * embed_feature),
+            nn.LeakyReLU(),
+            nn.Linear(in_features=pattern_size * embed_feature, out_features=pattern_size * embed_feature),
+            nn.LeakyReLU(),
+            nn.Linear(in_features=pattern_size * embed_feature, out_features=pattern_size * embed_feature)
+        )
+
+        # MLP layers for sequence feature.
+        self.mlp_sequence = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(in_features=200 * embed_feature, out_features=200 * embed_feature),
+            nn.LeakyReLU(),
+            nn.Linear(in_features=200 * embed_feature, out_features=200 * embed_feature),
+            nn.LeakyReLU(),
+            nn.Linear(in_features=200 * embed_feature, out_features=200 * embed_feature)
+        )
+
+        self.linear_pattern = nn.Sequential(
+            nn.Linear(in_features=pattern_size * embed_feature, out_features=linear_hidden_feature),
+            nn.LeakyReLU(),
+            nn.Dropout()
+        )
+        self.linear_sequence = nn.Sequential(
+            nn.Linear(in_features=200 * embed_feature, out_features=linear_hidden_feature),
+            nn.LeakyReLU(),
+            nn.Dropout()
+        )
+
+        self.aff = AttentionalFeatureFusionLayer(glo_pool_size=linear_hidden_feature, pool_type="1d")
+
+        self.flatten = nn.Flatten()
+
+        self.fc = nn.Sequential(
+            nn.BatchNorm1d(num_features=linear_hidden_feature),
+            nn.Linear(in_features=linear_hidden_feature, out_features=1024),
+            nn.LeakyReLU(),
+            nn.Dropout(),
+            nn.Linear(in_features=1024, out_features=256),
+            nn.LeakyReLU(),
+            nn.Dropout(),
+            nn.Linear(in_features=256, out_features=64),
+            nn.LeakyReLU(),
+            nn.Dropout(),
+            nn.Linear(in_features=64, out_features=32),
+            nn.LeakyReLU(),
+        )
+
+        self.output_layer = nn.Sequential(
+            nn.Linear(in_features=32, out_features=pattern_size),
+            nn.LogSoftmax(dim=1)
+        )
+
+    # Shape of inputs is (Batch, Length, Dimension)
+    def forward(self, sequence: torch.Tensor, pattern: torch.Tensor) -> torch.Tensor:
+        # Forward process of pattern feature.
+        pattern = self.mlp_pattern(pattern)
+        pattern = self.linear_pattern(pattern)
+
+        # Forward process of sequence feature.
+        sequence = self.mlp_sequence(sequence)
+        sequence = self.linear_sequence(sequence)
+
+        embed, _ = self.aff(pattern, sequence)
+        embed = self.flatten(embed)
+        embed = self.fc(embed)
+        embed = self.output_layer(embed)
+
+        return embed
+
+
+class AblationModelCNN(nn.Module):
+    def __init__(self,
+                 embed_feature: int,
+                 pattern_size: int,
+                 linear_hidden_feature: int = 128,
+                 name: str = "Ablation-Model-CNN"
+                 ) -> None:
+
+        super().__init__()
+
+        self.name = name
+        self.loss_function = nn.NLLLoss()
+
+        self.cnn_extractor = nn.Sequential(
+            nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=3, padding=1),
+            nn.MaxPool1d(kernel_size=3, padding=1),  # TODO: review
+            nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=3, padding=1),
+            nn.MaxPool1d(kernel_size=3, padding=1),
+            nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=3, padding=1),
+        )
+
+        self.position_encoder_pattern = PositionEncoder(d_model=embed_feature, length=pattern_size, batch_first=True)
+        self.position_encoder_sequence = PositionEncoder(d_model=embed_feature, length=200, batch_first=True)
+
+        self.linear_pattern = nn.Sequential(
+            nn.Linear(in_features=pattern_size * embed_feature, out_features=linear_hidden_feature),
+            nn.LeakyReLU(),
+            nn.Dropout()
+        )
+        self.linear_sequence = nn.Sequential(
+            nn.Linear(in_features=200 * embed_feature, out_features=linear_hidden_feature),
+            nn.LeakyReLU(),
+            nn.Dropout()
+        )
+
+        self.aff = AttentionalFeatureFusionLayer(glo_pool_size=linear_hidden_feature, pool_type="1d")
+
+        self.flatten = nn.Flatten()
+
+        self.fc = nn.Sequential(
+            nn.BatchNorm1d(num_features=linear_hidden_feature),
+            nn.Linear(in_features=linear_hidden_feature, out_features=1024),
+            nn.LeakyReLU(),
+            nn.Dropout(),
+            nn.Linear(in_features=1024, out_features=256),
+            nn.LeakyReLU(),
+            nn.Dropout(),
+            nn.Linear(in_features=256, out_features=64),
+            nn.LeakyReLU(),
+            nn.Dropout(),
+            nn.Linear(in_features=64, out_features=32),
+            nn.LeakyReLU(),
+        )
+
+        self.output_layer = nn.Sequential(
+            nn.Linear(in_features=32, out_features=pattern_size),
+            nn.LogSoftmax(dim=1)
+        )
+
+    # Shape of inputs is (Batch, Length, Dimension)
+    def forward(self, sequence: torch.Tensor, pattern: torch.Tensor) -> torch.Tensor:
+        # Forward process of pattern feature.
+        pattern = self.position_encoder_pattern(pattern)  # Output size: (B, L, D)
+        pattern = torch.permute(input=pattern, dims=(0, 2, 1))  # (B, L, D) -> (B, D, L)
+        pattern = self.cnn_extractor(pattern)  # Output size: (B, D, L)
+        pattern = torch.permute(input=pattern, dims=(0, 2, 1))  # (B, D, L) -> (B, L, D)
+        pattern = self.flatten(pattern)
+        pattern = self.linear_pattern(pattern)
+
+        # Forward process of sequence feature.
+        sequence = self.position_encoder_sequence(sequence)  # Output size: (B, L, D)
+        sequence = torch.permute(input=sequence, dims=(0, 2, 1))  # (B, L, D) -> (B, D, L)
+        sequence = self.cnn_extractor(sequence)  # Output size: (B, D, L)
+        sequence = torch.permute(input=sequence, dims=(0, 2, 1))  # (B, D, L) -> (B, L, D)
+        sequence = self.flatten(sequence)
+        sequence = self.linear_sequence(sequence)
+
+        embed, _ = self.aff(pattern, sequence)
+        embed = self.flatten(embed)
+        embed = self.fc(embed)
+        embed = self.output_layer(embed)
+
+        return embed
+
+
+# TODO: review
+class AblationModelRNN(nn.Module):
+    def __init__(self,
+                 embed_feature: int,
+                 pattern_size: int,
+                 linear_hidden_feature: int = 128,
+                 name: str = "Ablation-Model-RNN"
+                 ) -> None:
+
+        super().__init__()
+
+        self.name = name
+        self.loss_function = nn.NLLLoss()
+
+        self.rnn_extractor = nn.RNN(input_size=embed_feature, hidden_size=embed_feature, num_layers=3, batch_first=True)
+
+        self.linear_pattern = nn.Sequential(
+            nn.Linear(in_features=pattern_size * embed_feature, out_features=linear_hidden_feature),
+            nn.LeakyReLU(),
+            nn.Dropout()
+        )
+        self.linear_sequence = nn.Sequential(
+            nn.Linear(in_features=200 * embed_feature, out_features=linear_hidden_feature),
+            nn.LeakyReLU(),
+            nn.Dropout()
+        )
+
+        self.aff = AttentionalFeatureFusionLayer(glo_pool_size=linear_hidden_feature, pool_type="1d")
+
+        self.flatten = nn.Flatten()
+
+        self.fc = nn.Sequential(
+            nn.BatchNorm1d(num_features=linear_hidden_feature),
+            nn.Linear(in_features=linear_hidden_feature, out_features=1024),
+            nn.LeakyReLU(),
+            nn.Dropout(),
+            nn.Linear(in_features=1024, out_features=256),
+            nn.LeakyReLU(),
+            nn.Dropout(),
+            nn.Linear(in_features=256, out_features=64),
+            nn.LeakyReLU(),
+            nn.Dropout(),
+            nn.Linear(in_features=64, out_features=32),
+            nn.LeakyReLU(),
+        )
+
+        self.output_layer = nn.Sequential(
+            nn.Linear(in_features=32, out_features=pattern_size),
+            nn.LogSoftmax(dim=1)
+        )
+
+    # Shape of inputs is (Batch, Length, Dimension)
+    def forward(self, sequence: torch.Tensor, pattern: torch.Tensor) -> torch.Tensor:
+        # Forward process of pattern feature.
+        pattern = self.rnn_extractor(pattern)
+        pattern = self.flatten(pattern)
+        pattern = self.linear_pattern(pattern)
+
+        # Forward process of sequence feature.
+        sequence = self.rnn_extractor(sequence)
+        sequence = self.flatten(sequence)
+        sequence = self.linear_sequence(sequence)
+
+        embed, _ = self.aff(pattern, sequence)
+        embed = self.flatten(embed)
+        embed = self.fc(embed)
+        embed = self.output_layer(embed)
+
+        return embed
