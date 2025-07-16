@@ -108,10 +108,10 @@ for fold in range(1, 6):
         num_tf_layer=3,
         linear_hidden_feature=64,
     )
-    # loss_fn_weight = torch.ones(pattern_size)
-    # loss_fn_weight[0] = 0.5
-    # model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight.to(device))
-    model.loss_function = torch.nn.NLLLoss()
+    loss_fn_weight = torch.ones(pattern_size)
+    loss_fn_weight[0] = 0.5
+    model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight.to(device))
+    # model.loss_function = torch.nn.NLLLoss()
     model.optimizer = torch.optim.AdamW(model.parameters(), lr=0.001, weight_decay=1e-5)
 
     model.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
