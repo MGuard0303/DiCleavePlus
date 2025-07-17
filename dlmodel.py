@@ -811,9 +811,7 @@ class AblationModelCNN(nn.Module):
 
         self.cnn_extractor = nn.Sequential(
             nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=3, padding=1),
-            nn.MaxPool1d(kernel_size=3, padding=1),  # TODO: review
             nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=3, padding=1),
-            nn.MaxPool1d(kernel_size=3, padding=1),
             nn.Conv1d(in_channels=embed_feature, out_channels=embed_feature, kernel_size=3, padding=1),
         )
 
@@ -881,7 +879,6 @@ class AblationModelCNN(nn.Module):
         return embed
 
 
-# TODO: review
 class AblationModelRNN(nn.Module):
     def __init__(self,
                  embed_feature: int,
@@ -935,12 +932,12 @@ class AblationModelRNN(nn.Module):
     # Shape of inputs is (Batch, Length, Dimension)
     def forward(self, sequence: torch.Tensor, pattern: torch.Tensor) -> torch.Tensor:
         # Forward process of pattern feature.
-        pattern = self.rnn_extractor(pattern)
+        pattern, patt_hn = self.rnn_extractor(pattern)
         pattern = self.flatten(pattern)
         pattern = self.linear_pattern(pattern)
 
         # Forward process of sequence feature.
-        sequence = self.rnn_extractor(sequence)
+        sequence, seq_hn = self.rnn_extractor(sequence)
         sequence = self.flatten(sequence)
         sequence = self.linear_sequence(sequence)
 
