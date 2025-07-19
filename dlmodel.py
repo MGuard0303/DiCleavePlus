@@ -895,12 +895,12 @@ class AblationModelRNN(nn.Module):
         self.rnn_extractor = nn.RNN(input_size=embed_feature, hidden_size=embed_feature, num_layers=3, batch_first=True)
 
         self.linear_pattern = nn.Sequential(
-            nn.Linear(in_features=pattern_size * embed_feature, out_features=linear_hidden_feature),
+            nn.Linear(in_features=3 * embed_feature, out_features=linear_hidden_feature),
             nn.LeakyReLU(),
             nn.Dropout()
         )
         self.linear_sequence = nn.Sequential(
-            nn.Linear(in_features=200 * embed_feature, out_features=linear_hidden_feature),
+            nn.Linear(in_features=3 * embed_feature, out_features=linear_hidden_feature),
             nn.LeakyReLU(),
             nn.Dropout()
         )
@@ -932,16 +932,18 @@ class AblationModelRNN(nn.Module):
     # Shape of inputs is (Batch, Length, Dimension)
     def forward(self, sequence: torch.Tensor, pattern: torch.Tensor) -> torch.Tensor:
         # Forward process of pattern feature.
-        pattern, patt_hn = self.rnn_extractor(pattern)
-        pattern = self.flatten(pattern)
-        pattern = self.linear_pattern(pattern)
+        patt_out, patt_hn = self.rnn_extractor(pattern)
+        patt_hn = torch.permute(patt_hn, (1, 0, 2))
+        patt_hn = self.flatten(patt_hn)
+        patt_hn = self.linear_pattern(patt_hn)
 
         # Forward process of sequence feature.
-        sequence, seq_hn = self.rnn_extractor(sequence)
-        sequence = self.flatten(sequence)
-        sequence = self.linear_sequence(sequence)
+        seq_out, seq_hn = self.rnn_extractor(sequence)
+        seq_hn = torch.permute(seq_hn, (1, 0, 2))
+        seq_hn = self.flatten(seq_hn)
+        seq_hn = self.linear_sequence(seq_hn)
 
-        embed, _ = self.aff(pattern, sequence)
+        embed, _ = self.aff(patt_hn, seq_hn)
         embed = self.flatten(embed)
         embed = self.fc(embed)
         embed = self.output_layer(embed)
