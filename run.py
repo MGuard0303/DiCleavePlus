@@ -100,7 +100,7 @@ for fold in range(1, 6):
         pickle.dump(dl_eval, f)
 
     # Initial model
-    model = dlmodel.ModelConcatFlex(
+    model = dlmodel.ModelAffFlex(
         embed_feature=2 * embed_feature,
         pattern_size=pattern_size,
         num_attn_head=8,
