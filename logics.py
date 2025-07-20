@@ -92,7 +92,7 @@ def train(model: torch.nn.Module, train_loader: DataLoader, valid_loader: DataLo
                 if count < tolerance:
                     count += 1
                 elif count >= tolerance:
-                    print("Stopped by early-stopping")
+                    print("Stopped by early-stopping.")
                     break
 
     print(f"{model.name}: Training complete.")
@@ -136,14 +136,14 @@ def evaluate(model: torch.nn.Module, eval_loader: DataLoader, returns: bool = Fa
     top1_acc = metrics.topk_acc(pred=eval_pred, label=eval_lbl, k=1)
     macro_f1 = metrics.multi_f1(pred=eval_pred, label=eval_lbl, average="macro")
     weighted_f1 = metrics.multi_f1(pred=eval_pred, label=eval_lbl, average="weighted")
-    top3_acc = metrics.topk_acc(eval_pred, eval_lbl, k=3)
+    top3_acc = metrics.topk_acc(pred=eval_pred, label=eval_lbl, k=3)
 
     pmf = metrics.pmf(eval_pred, eval_lbl)
     pse = metrics.pse(eval_pred, eval_lbl)
 
     binary_acc, binary_spe, binary_sen, binary_mcc = metrics.binary_metric(eval_pred, eval_lbl)
 
-    # Print evaluation result
+    # Print evaluation result.
     print(f"Evaluate {model.name}")
     print(f"| Average Evaluation Loss: {avg_eval_loss:.3f} |")
     print(f"| Top-1 Accuracy: {top1_acc:.3f} |")
