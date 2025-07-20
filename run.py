@@ -14,7 +14,7 @@ import utils
 
 # Hyper parameters.
 date = datetime.datetime.now().strftime("%Y%m%d")
-task = "cat_f_14_3"  # "model type, pattern size, dataset type".
+task = "mlp_14_2"  # "model type, pattern size, dataset type".
 expt_no = 1
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 pattern_size = 14
@@ -22,12 +22,12 @@ epoch_size = 100
 
 
 # Load dataset and separate data for k-fold.
-dataset_path = "dataset/luna/human/dataset_14_3.csv"
+dataset_path = "dataset/luna/human/dataset_14_2.csv"
 df = pd.read_csv(dataset_path)
 fold_size, _ = divmod(len(df), 5)
 
 # Load pre-precessed data.
-with open("dataset/luna/human/preprocessed_14_3.pkl", "rb") as f:
+with open("dataset/luna/human/preprocessed_14_2.pkl", "rb") as f:
     preprocessed = pickle.load(f)
 
 embed_feature = 32
@@ -100,6 +100,7 @@ for fold in range(1, 6):
         pickle.dump(dl_eval, f)
 
     # Initial model
+    """
     model = dlmodel.ModelConcatFlex(
         embed_feature=2 * embed_feature,
         pattern_size=pattern_size,
@@ -108,10 +109,15 @@ for fold in range(1, 6):
         num_tf_layer=3,
         linear_hidden_feature=128,
     )
-    # loss_fn_weight = torch.ones(pattern_size)
-    # loss_fn_weight[0] = 0.5
-    # model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight.to(device))
-    model.loss_function = torch.nn.NLLLoss()
+    """
+    model = dlmodel.AblationModelMLP(
+        embed_feature=2 * embed_feature,
+        pattern_size=pattern_size,
+    )
+    loss_fn_weight = torch.ones(pattern_size)
+    loss_fn_weight[0] = 0.5
+    model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight.to(device))
+    # model.loss_function = torch.nn.NLLLoss()
     model.optimizer = torch.optim.AdamW(model.parameters(), lr=0.001, weight_decay=1e-5)
 
     model.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
