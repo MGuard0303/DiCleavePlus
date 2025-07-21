@@ -14,7 +14,7 @@ import utils
 
 # Hyper parameters.
 date = datetime.datetime.now().strftime("%Y%m%d")
-task = "mlp_14_2"  # "model type, pattern size, dataset type".
+task = "cnn_14_2"  # "model type, pattern size, dataset type".
 expt_no = 1
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 pattern_size = 14
@@ -110,7 +110,7 @@ for fold in range(1, 6):
         linear_hidden_feature=128,
     )
     """
-    model = dlmodel.AblationModelMLP(
+    model = dlmodel.AblationModelCNN(
         embed_feature=2 * embed_feature,
         pattern_size=pattern_size,
     )
