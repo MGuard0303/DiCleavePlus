@@ -14,7 +14,7 @@ import utils
 
 # Hyper parameters.
 date = datetime.datetime.now().strftime("%Y%m%d")
-task = "cnn_14_3"  # "model type, pattern size, dataset type".
+task = "cnn_14_1"  # "model type, pattern size, dataset type".
 expt_no = 1
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 pattern_size = 14
