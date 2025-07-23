@@ -1,6 +1,9 @@
 import math
 
+import matplotlib.pyplot as plt
+import seaborn as sns
 import torch
+from sklearn.metrics import confusion_matrix
 from sklearn.metrics import f1_score
 
 
@@ -209,3 +212,32 @@ def multi_f1(pred: torch.Tensor, label: torch.Tensor, average: str) -> float:
         f1 = f1_score(y_true=label, y_pred=label_pred, labels=labels, average=average)
 
         return f1
+
+
+# TODO: Review.
+def heatmap(pred: torch.Tensor, label: torch.Tensor) -> None:
+    if len(pred) != len(label):
+        raise ValueError("The length of prediction tensor and label tensor does not match.")
+    else:
+        pred = pred.detach()
+        pred = pred.to_numpy()
+        label = label.detach()
+        label = label.to_numpy()
+
+        labels = [i for i in range(14)]
+
+        cm = confusion_matrix(label, pred)
+
+        fig, ax = plt.subplots()
+        sns.heatmap(cm, annot=True, cmap="Blues", xticklabels=labels, yticklabels=labels, ax=ax)
+
+        ax.set_xlabel("Prediction")
+        ax.set_ylabel("True Label")
+
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha="right")
+        ax.set_yticklabels(ax.get_yticklables(), rotation=45)
+
+        fig.tight_layout()
+        plt.show()
+
+        # TODO: Add save function.
