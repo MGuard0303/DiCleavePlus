@@ -441,6 +441,8 @@ class ModelAffFlex(nn.Module):
         sequence = self.linear_sequence(sequence)
 
         embed, _ = self.aff(pattern, sequence)
+        if embed.dim() == 1:
+            embed = embed.unsqueeze(0)
         embed = self.flatten(embed)
         embed = self.fc(embed)
         embed = self.output_layer(embed)

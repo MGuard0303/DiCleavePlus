@@ -1,9 +1,12 @@
 from collections import deque
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 import torch
 from torch import nn
+from sklearn.metrics import confusion_matrix
 
 
 def kmer(seq: str, k: int) -> list:
@@ -170,3 +173,37 @@ class ModelQ:
         else:
             self.queue.popleft()
             self.queue.append(model)
+
+
+def plot_heatmap(pred: torch.Tensor, label: torch.Tensor, num_labels: int, is_save: bool = False,
+                 save_path: str | Path = None) -> None:
+    if len(pred) != len(label):
+        raise ValueError("The length of prediction tensor and label tensor does not match.")
+    else:
+        pred = pred.detach()
+        pred = torch.exp(pred)
+        _, label_pred = torch.max(pred, dim=1)
+        label_pred.cpu().numpy()
+
+        label = label.detach()
+        label = label.cpu().numpy()
+
+        labels = [i for i in range(num_labels)]
+
+        cm = confusion_matrix(label, label_pred)
+
+        fig, ax = plt.subplots(figsize=(11.69, 8.27))
+        sns.heatmap(cm, annot=True, fmt=".0f", cmap="Blues", xticklabels=labels, yticklabels=labels, ax=ax)
+
+        ax.set_xlabel("Prediction Label ", fontsize=14, fontweight="bold", labelpad=20)
+        ax.set_ylabel("True Label", fontsize=14, fontweight="bold", labelpad=20)
+
+        ax.tick_params(left=False, bottom=False)
+        ax.set_xticklabels(ax.get_xticklabels(), fontsize=12, fontweight="bold")
+        ax.set_yticklabels(ax.get_yticklabels(), fontsize=12, fontweight="bold", rotation=45)
+
+        fig.tight_layout()
+        plt.show()
+
+        if is_save:
+            fig.savefig(save_path)
