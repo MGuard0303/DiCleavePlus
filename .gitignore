@@ -168,7 +168,3 @@ webserver/
 *.tar
 *.gz
 *.tar.gz
-dc_run.py
-dc_eval.py
-eval.py
-plot.py

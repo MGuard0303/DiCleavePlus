@@ -12,7 +12,7 @@ import logics
 import utils
 
 
-# Hyper parameters.
+# Experiment hyper parameters.
 date = datetime.datetime.now().strftime("%Y%m%d")
 task = "cnn_14_3"  # "model type, pattern size, dataset type".
 expt_no = 1
