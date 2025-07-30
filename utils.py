@@ -206,4 +206,4 @@ def plot_heatmap(pred: torch.Tensor, label: torch.Tensor, num_labels: int, is_sa
         plt.show()
 
         if is_save:
-            fig.savefig(save_path)
+            fig.savefig(save_path, dpi=600, format="png")
