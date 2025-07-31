@@ -175,7 +175,7 @@ class ModelQ:
             self.queue.append(model)
 
 
-def plot_heatmap(pred: torch.Tensor, label: torch.Tensor, num_labels: int, is_save: bool = False,
+def plot_heatmap(pred: torch.Tensor, label: torch.Tensor, num_labels: int, title: str, is_save: bool = False,
                  save_path: str | Path = None) -> None:
     if len(pred) != len(label):
         raise ValueError("The length of prediction tensor and label tensor does not match.")
@@ -195,7 +195,9 @@ def plot_heatmap(pred: torch.Tensor, label: torch.Tensor, num_labels: int, is_sa
         fig, ax = plt.subplots(figsize=(11.69, 8.27))
         sns.heatmap(cm, annot=True, fmt=".0f", cmap="Blues", xticklabels=labels, yticklabels=labels, ax=ax)
 
-        ax.set_xlabel("Prediction Label ", fontsize=14, fontweight="bold", labelpad=20)
+        ax.set_title(title, fontsize=14, fontweight="bold", pad=20)
+
+        ax.set_xlabel("Predicted Label ", fontsize=14, fontweight="bold", labelpad=20)
         ax.set_ylabel("True Label", fontsize=14, fontweight="bold", labelpad=20)
 
         ax.tick_params(left=False, bottom=False)
