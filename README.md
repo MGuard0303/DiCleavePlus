@@ -31,9 +31,7 @@ Note that you need to install PyTorch by yourself because PyTorch provides diffe
 <br>
 
 ### Verification data
-We provide data for verifying the results of our paper in GitHub Releases. To download verification data, run:
-
-`wget https://github.com/MGuard0303/DiCleavePlus/releases/tag/0.9.0/verify.tar.gz`
+We provide data for verifying the results of our paper in GitHub Releases.
 
 <br>
 <br>
