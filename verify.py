@@ -17,7 +17,7 @@ path_concat_2 = Path("./verification/model_concat_2")
 embed_feature = 32
 
 # Verify results from model-aff on Dataset-1.
-subdir = [ele for ele in path_aff_1.iterdir() if ele.is_dir()].sort()
+subdir = sorted([ele for ele in path_aff_1.iterdir() if ele.is_dir()])
 
 for i in range(0, 5):
     offset = 2 * i
@@ -61,7 +61,7 @@ for i in range(0, 5):
 
 
 # Verify results from model-aff on Dataset-2.
-subdir = [ele for ele in path_aff_2.iterdir() if ele.is_dir()].sort()
+subdir = sorted([ele for ele in path_aff_2.iterdir() if ele.is_dir()])
 
 for i in range(0, 5):
     offset = 2 * i
@@ -103,7 +103,7 @@ for i in range(0, 5):
 
 
 # Verify results from model-concat on Dataset-1.
-subdir = [ele for ele in path_concat_1.iterdir() if ele.is_dir()].sort()
+subdir = sorted([ele for ele in path_concat_1.iterdir() if ele.is_dir()])
 
 for i in range(0, 5):
     offset = 2 * i
@@ -147,7 +147,7 @@ for i in range(0, 5):
 
 
 # Verify results from model-concat on Dataset-2.
-subdir = [ele for ele in path_concat_2.iterdir() if ele.is_dir()].sort()
+subdir = sorted([ele for ele in path_concat_2.iterdir() if ele.is_dir()])
 
 for i in range(0, 5):
     offset = 2 * i
