@@ -8,171 +8,181 @@ import logics
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-dl_aff_ds1_path = Path("./verify/model-aff/dataset1")
-dl_aff_ds2_path = Path("./verify/model-aff/dataset2")
-param_aff_ds1_path = Path(f"{dl_aff_ds1_path}/param")
-param_aff_ds2_path = Path(f"{dl_aff_ds2_path}/param")
-dl_concat_ds1_path = Path("./verify/model-concat/dataset1")
-dl_concat_ds2_path = Path("./verify/model-concat/dataset2")
-param_concat_ds1_path = Path(f"{dl_concat_ds1_path}/param")
-param_concat_ds2_path = Path(f"{dl_concat_ds2_path}/param")
+
+path_aff_1 = Path("./verification/model_aff_1")
+path_aff_2 = Path("./verification/model_aff_2")
+path_concat_1 = Path("./verification/model_concat_1")
+path_concat_2 = Path("./verification/model_concat_2")
 
 embed_feature = 32
 
-# Model-aff results on Dataset-1
-dl_files = [file for file in dl_aff_ds1_path.iterdir() if file.is_file()]
-param_files = [file for file in param_aff_ds1_path.iterdir() if file.is_file()]
-dls = {
-    "fold1": [file for file in dl_files if "fold1" in file.name],
-    "fold2": [file for file in dl_files if "fold2" in file.name],
-    "fold3": [file for file in dl_files if "fold3" in file.name],
-    "fold4": [file for file in dl_files if "fold4" in file.name],
-    "fold5": [file for file in dl_files if "fold5" in file.name]
-}
-params = {
-    "fold1": [file for file in param_files if "fold1" in file.name],
-    "fold2": [file for file in param_files if "fold2" in file.name],
-    "fold3": [file for file in param_files if "fold3" in file.name],
-    "fold4": [file for file in param_files if "fold4" in file.name],
-    "fold5": [file for file in param_files if "fold5" in file.name]
-}
+# Verify results from model-aff on Dataset-1.
+subdir = [ele for ele in path_aff_1.iterdir() if ele.is_dir()].sort()
 
-print("Results of model-aff on Dataset-1")
+for i in range(0, 5):
+    offset = 2 * i
+    pattern_size = 10 + offset
 
-for fold in range(1, 6):
-    with open(dls[f"fold{fold}"][0], "rb") as f:
-        dl = pickle.load(f)
+    dl_evals = {
+        "fold1": tuple(subdir[i].glob("*fold1.pkl"))[0],
+        "fold2": tuple(subdir[i].glob("*fold2.pkl"))[0],
+        "fold3": tuple(subdir[i].glob("*fold3.pkl"))[0],
+        "fold4": tuple(subdir[i].glob("*fold4.pkl"))[0],
+        "fold5": tuple(subdir[i].glob("*fold5.pkl"))[0],
+    }
 
-    model = dlmodel.ModelAff(
-        embed_feature=2*embed_feature,
-        linear_hidden_feature=64,
-        num_attn_head=8,
-        tf_dim_forward=256,
-        num_tf_layer=3
+    params = {
+        "fold1": tuple(subdir[i].glob("*fold1.pt"))[0],
+        "fold2": tuple(subdir[i].glob("*fold2.pt"))[0],
+        "fold3": tuple(subdir[i].glob("*fold3.pt"))[0],
+        "fold4": tuple(subdir[i].glob("*fold4.pt"))[0],
+        "fold5": tuple(subdir[i].glob("*fold5.pt"))[0],
+    }
+
+    model = dlmodel.ModelAffFlex(
+        embed_feature=embed_feature,
+        pattern_size=pattern_size,
+        name=f"model-aff-{pattern_size}"
+    )
+    loss_fn_weight = torch.ones(pattern_size)
+    loss_fn_weight[0] = 0.5
+    model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight)
+
+    print(f"Verifying results of model-aff on Dataset-1, pattern size: {pattern_size}")
+
+    for fold in range(1, 6):
+        with open(dl_evals[f"fold{fold}"], "rb") as f:
+            dl_eval = pickle.load(f)
+
+        param = params[f"fold{fold}"]
+        model.load_state_dict(torch.load(param))
+        model.to(device)
+        logics.evaluate(model=model, eval_loader=dl_eval)
+
+
+# Verify results from model-aff on Dataset-2.
+subdir = [ele for ele in path_aff_2.iterdir() if ele.is_dir()].sort()
+
+for i in range(0, 5):
+    offset = 2 * i
+    pattern_size = 10 + offset
+
+    dl_evals = {
+        "fold1": tuple(subdir[i].glob("*fold1.pkl"))[0],
+        "fold2": tuple(subdir[i].glob("*fold2.pkl"))[0],
+        "fold3": tuple(subdir[i].glob("*fold3.pkl"))[0],
+        "fold4": tuple(subdir[i].glob("*fold4.pkl"))[0],
+        "fold5": tuple(subdir[i].glob("*fold5.pkl"))[0],
+    }
+
+    params = {
+        "fold1": tuple(subdir[i].glob("*fold1.pt"))[0],
+        "fold2": tuple(subdir[i].glob("*fold2.pt"))[0],
+        "fold3": tuple(subdir[i].glob("*fold3.pt"))[0],
+        "fold4": tuple(subdir[i].glob("*fold4.pt"))[0],
+        "fold5": tuple(subdir[i].glob("*fold5.pt"))[0],
+    }
+
+    model = dlmodel.ModelAffFlex(
+        embed_feature=embed_feature,
+        pattern_size=pattern_size,
+        name=f"model-aff-{pattern_size}"
     )
     model.loss_function = torch.nn.NLLLoss()
 
-    for param in params[f"fold{fold}"]:
-        model.name = f"model-aff-{param.name}"
+    print(f"Verifying results of model-aff on Dataset-2, pattern size: {pattern_size}")
+
+    for fold in range(1, 6):
+        with open(dl_evals[f"fold{fold}"], "rb") as f:
+            dl_eval = pickle.load(f)
+
+        param = params[f"fold{fold}"]
         model.load_state_dict(torch.load(param))
         model.to(device)
-        logics.evaluate(model=model, eval_loader=dl)
+        logics.evaluate(model=model, eval_loader=dl_eval)
 
 
-# Model-aff results on Dataset-2
-dl_files = [file for file in dl_aff_ds2_path.iterdir() if file.is_file()]
-param_files = [file for file in param_aff_ds2_path.iterdir() if file.is_file()]
-dls = {
-    "fold1": [file for file in dl_files if "fold1" in file.name],
-    "fold2": [file for file in dl_files if "fold2" in file.name],
-    "fold3": [file for file in dl_files if "fold3" in file.name],
-    "fold4": [file for file in dl_files if "fold4" in file.name],
-    "fold5": [file for file in dl_files if "fold5" in file.name]
-}
-params = {
-    "fold1": [file for file in param_files if "fold1" in file.name],
-    "fold2": [file for file in param_files if "fold2" in file.name],
-    "fold3": [file for file in param_files if "fold3" in file.name],
-    "fold4": [file for file in param_files if "fold4" in file.name],
-    "fold5": [file for file in param_files if "fold5" in file.name]
-}
+# Verify results from model-concat on Dataset-1.
+subdir = [ele for ele in path_concat_1.iterdir() if ele.is_dir()].sort()
 
-print("Results of model-aff on Dataset-2")
+for i in range(0, 5):
+    offset = 2 * i
+    pattern_size = 10 + offset
 
-for fold in range(1, 6):
-    with open(dls[f"fold{fold}"][0], "rb") as f:
-        dl = pickle.load(f)
+    dl_evals = {
+        "fold1": tuple(subdir[i].glob("*fold1.pkl"))[0],
+        "fold2": tuple(subdir[i].glob("*fold2.pkl"))[0],
+        "fold3": tuple(subdir[i].glob("*fold3.pkl"))[0],
+        "fold4": tuple(subdir[i].glob("*fold4.pkl"))[0],
+        "fold5": tuple(subdir[i].glob("*fold5.pkl"))[0],
+    }
 
-    model = dlmodel.ModelAff(
-        embed_feature=2 * embed_feature,
-        linear_hidden_feature=64,
-        num_attn_head=8,
-        tf_dim_forward=256,
-        num_tf_layer=3
+    params = {
+        "fold1": tuple(subdir[i].glob("*fold1.pt"))[0],
+        "fold2": tuple(subdir[i].glob("*fold2.pt"))[0],
+        "fold3": tuple(subdir[i].glob("*fold3.pt"))[0],
+        "fold4": tuple(subdir[i].glob("*fold4.pt"))[0],
+        "fold5": tuple(subdir[i].glob("*fold5.pt"))[0],
+    }
+
+    model = dlmodel.ModelConcatFlex(
+        embed_feature=embed_feature,
+        pattern_size=pattern_size,
+        name=f"model-aff-{pattern_size}"
+    )
+    loss_fn_weight = torch.ones(pattern_size)
+    loss_fn_weight[0] = 0.5
+    model.loss_function = torch.nn.NLLLoss(weight=loss_fn_weight)
+
+    print(f"Verifying results of model-concat on Dataset-1, pattern size: {pattern_size}")
+
+    for fold in range(1, 6):
+        with open(dl_evals[f"fold{fold}"], "rb") as f:
+            dl_eval = pickle.load(f)
+
+        param = params[f"fold{fold}"]
+        model.load_state_dict(torch.load(param))
+        model.to(device)
+        logics.evaluate(model=model, eval_loader=dl_eval)
+
+
+# Verify results from model-concat on Dataset-2.
+subdir = [ele for ele in path_concat_2.iterdir() if ele.is_dir()].sort()
+
+for i in range(0, 5):
+    offset = 2 * i
+    pattern_size = 10 + offset
+
+    dl_evals = {
+        "fold1": tuple(subdir[i].glob("*fold1.pkl"))[0],
+        "fold2": tuple(subdir[i].glob("*fold2.pkl"))[0],
+        "fold3": tuple(subdir[i].glob("*fold3.pkl"))[0],
+        "fold4": tuple(subdir[i].glob("*fold4.pkl"))[0],
+        "fold5": tuple(subdir[i].glob("*fold5.pkl"))[0],
+    }
+
+    params = {
+        "fold1": tuple(subdir[i].glob("*fold1.pt"))[0],
+        "fold2": tuple(subdir[i].glob("*fold2.pt"))[0],
+        "fold3": tuple(subdir[i].glob("*fold3.pt"))[0],
+        "fold4": tuple(subdir[i].glob("*fold4.pt"))[0],
+        "fold5": tuple(subdir[i].glob("*fold5.pt"))[0],
+    }
+
+    model = dlmodel.ModelConcatFlex(
+        embed_feature=embed_feature,
+        pattern_size=pattern_size,
+        name=f"model-aff-{pattern_size}"
     )
     model.loss_function = torch.nn.NLLLoss()
 
-    for param in params[f"fold{fold}"]:
-        model.name = f"model-aff-{param.name}"
+    print(f"Verifying results of model-concat on Dataset-2, pattern size: {pattern_size}")
+
+    for fold in range(1, 6):
+        with open(dl_evals[f"fold{fold}"], "rb") as f:
+            dl_eval = pickle.load(f)
+
+        param = params[f"fold{fold}"]
         model.load_state_dict(torch.load(param))
         model.to(device)
-        logics.evaluate(model=model, eval_loader=dl)
-
-
-# Model-concat results on Dataset-1
-dl_files = [file for file in dl_concat_ds1_path.iterdir() if file.is_file()]
-param_files = [file for file in param_concat_ds1_path.iterdir() if file.is_file()]
-dls = {
-    "fold1": [file for file in dl_files if "fold1" in file.name],
-    "fold2": [file for file in dl_files if "fold2" in file.name],
-    "fold3": [file for file in dl_files if "fold3" in file.name],
-    "fold4": [file for file in dl_files if "fold4" in file.name],
-    "fold5": [file for file in dl_files if "fold5" in file.name]
-}
-params = {
-    "fold1": [file for file in param_files if "fold1" in file.name],
-    "fold2": [file for file in param_files if "fold2" in file.name],
-    "fold3": [file for file in param_files if "fold3" in file.name],
-    "fold4": [file for file in param_files if "fold4" in file.name],
-    "fold5": [file for file in param_files if "fold5" in file.name]
-}
-
-print("Results of model-concat on Dataset-1")
-
-for fold in range(1, 6):
-    with open(dls[f"fold{fold}"][0], "rb") as f:
-        dl = pickle.load(f)
-
-    model = dlmodel.ModelConcat(
-        embed_feature=2 * embed_feature,
-        linear_hidden_feature=64,
-        num_attn_head=8,
-        tf_dim_forward=256,
-        num_tf_layer=3
-    )
-    model.loss_function = torch.nn.NLLLoss()
-
-    for param in params[f"fold{fold}"]:
-        model.name = f"model-concat-{param.name}"
-        model.load_state_dict(torch.load(param))
-        model.to(device)
-        logics.evaluate(model=model, eval_loader=dl)
-
-
-# Model-concat results on Dataset-2
-dl_files = [file for file in dl_concat_ds2_path.iterdir() if file.is_file()]
-param_files = [file for file in param_concat_ds2_path.iterdir() if file.is_file()]
-dls = {
-    "fold1": [file for file in dl_files if "fold1" in file.name],
-    "fold2": [file for file in dl_files if "fold2" in file.name],
-    "fold3": [file for file in dl_files if "fold3" in file.name],
-    "fold4": [file for file in dl_files if "fold4" in file.name],
-    "fold5": [file for file in dl_files if "fold5" in file.name]
-}
-params = {
-    "fold1": [file for file in param_files if "fold1" in file.name],
-    "fold2": [file for file in param_files if "fold2" in file.name],
-    "fold3": [file for file in param_files if "fold3" in file.name],
-    "fold4": [file for file in param_files if "fold4" in file.name],
-    "fold5": [file for file in param_files if "fold5" in file.name]
-}
-
-print("Results of model-concat on Dataset-2")
-for fold in range(1, 6):
-    with open(dls[f"fold{fold}"][0], "rb") as f:
-        dl = pickle.load(f)
-
-    model = dlmodel.ModelConcat(
-        embed_feature=2 * embed_feature,
-        linear_hidden_feature=64,
-        num_attn_head=8,
-        tf_dim_forward=256,
-        num_tf_layer=3
-    )
-    model.loss_function = torch.nn.NLLLoss()
-
-    for param in params[f"fold{fold}"]:
-        model.name = f"model-concat-{param.name}"
-        model.load_state_dict(torch.load(param))
-        model.to(device)
-        logics.evaluate(model=model, eval_loader=dl)
+        logics.evaluate(model=model, eval_loader=dl_eval)
