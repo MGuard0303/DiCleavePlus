@@ -16,7 +16,8 @@ The basic environment requirement is listed below:
 
 <br>
 
-We provide conda environment file in `./env` directory. We recommend to build conda virtual environment with this file when using DiCleavePlus.
+We provide conda environment file in `./env` directory. We recommend to build conda virtual environment with this file 
+when using DiCleavePlus.
 
 To set up the environment, use these codes below:
 
@@ -26,7 +27,12 @@ To set up the environment, use these codes below:
 
 `conda env create -f ./env/env.yaml`
 
-Note that you need to install PyTorch by yourself because PyTorch provides different packages depending on the device (briefly, GPU version and CPU-only version). Please refer https://pytorch.org/get-started/locally/ and https://pytorch.org/get-started/previous-versions/ to install the proper PyTorch version.
+Note that you need to install PyTorch by yourself because PyTorch provides different packages depending on the device 
+(briefly, GPU version and CPU-only version). Please refer https://pytorch.org/get-started/locally/ and 
+https://pytorch.org/get-started/previous-versions/ to install the proper PyTorch version.
+
+DiCleavePlus is trained on GPU. If you want to use trained DiCleavePlus model or to verify the results from our paper, 
+Please install the GPU version PyTorch.
 
 <br>
 
