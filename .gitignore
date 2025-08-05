@@ -163,7 +163,3 @@ cython_debug/
 .DS_Store
 expt/
 dataset/
-verify/
-*.tar
-*.gz
-*.tar.gz
