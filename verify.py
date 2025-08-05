@@ -40,9 +40,8 @@ for i in range(0, 5):
     }
 
     model = dlmodel.ModelAffFlex(
-        embed_feature=embed_feature,
+        embed_feature=2 * embed_feature,
         pattern_size=pattern_size,
-        name=f"model-aff-{pattern_size}"
     )
     loss_fn_weight = torch.ones(pattern_size)
     loss_fn_weight[0] = 0.5
@@ -55,6 +54,7 @@ for i in range(0, 5):
             dl_eval = pickle.load(f)
 
         param = params[f"fold{fold}"]
+        model.name = f"model-aff-{pattern_size}-fold{fold}"
         model.load_state_dict(torch.load(param))
         model.to(device)
         logics.evaluate(model=model, eval_loader=dl_eval)
@@ -84,9 +84,8 @@ for i in range(0, 5):
     }
 
     model = dlmodel.ModelAffFlex(
-        embed_feature=embed_feature,
+        embed_feature=2 * embed_feature,
         pattern_size=pattern_size,
-        name=f"model-aff-{pattern_size}"
     )
     model.loss_function = torch.nn.NLLLoss()
 
@@ -97,6 +96,7 @@ for i in range(0, 5):
             dl_eval = pickle.load(f)
 
         param = params[f"fold{fold}"]
+        model.name = f"model-aff-{pattern_size}-fold{fold}"
         model.load_state_dict(torch.load(param))
         model.to(device)
         logics.evaluate(model=model, eval_loader=dl_eval)
@@ -126,9 +126,8 @@ for i in range(0, 5):
     }
 
     model = dlmodel.ModelConcatFlex(
-        embed_feature=embed_feature,
+        embed_feature=2 * embed_feature,
         pattern_size=pattern_size,
-        name=f"model-aff-{pattern_size}"
     )
     loss_fn_weight = torch.ones(pattern_size)
     loss_fn_weight[0] = 0.5
@@ -141,6 +140,7 @@ for i in range(0, 5):
             dl_eval = pickle.load(f)
 
         param = params[f"fold{fold}"]
+        model.name = f"model-concat-{pattern_size}-fold{fold}"
         model.load_state_dict(torch.load(param))
         model.to(device)
         logics.evaluate(model=model, eval_loader=dl_eval)
@@ -170,9 +170,8 @@ for i in range(0, 5):
     }
 
     model = dlmodel.ModelConcatFlex(
-        embed_feature=embed_feature,
+        embed_feature=2 * embed_feature,
         pattern_size=pattern_size,
-        name=f"model-aff-{pattern_size}"
     )
     model.loss_function = torch.nn.NLLLoss()
 
@@ -183,6 +182,7 @@ for i in range(0, 5):
             dl_eval = pickle.load(f)
 
         param = params[f"fold{fold}"]
+        model.name = f"model-concat-{pattern_size}-fold{fold}"
         model.load_state_dict(torch.load(param))
         model.to(device)
         logics.evaluate(model=model, eval_loader=dl_eval)
