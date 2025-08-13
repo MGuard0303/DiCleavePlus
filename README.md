@@ -44,14 +44,20 @@ Please install the GPU version PyTorch.
 ### Verification data
 We provide data for verifying the results of our paper in GitHub Releases.
 
+First, create a directory named verification.
+
+`mkdir ./verification`
+
+Download the verification data to this directory
+
 ```
-wget https://github.com/MGuard0303/DiCleavePlus/releases/download/data/model_aff_1.tar.gz
+wget -P ./verification https://github.com/MGuard0303/DiCleavePlus/releases/download/data/model_aff_1.tar.gz
 
-wget https://github.com/MGuard0303/DiCleavePlus/releases/download/data/model_aff_2.tar.gz
+wget -P ./verification https://github.com/MGuard0303/DiCleavePlus/releases/download/data/model_aff_2.tar.gz
 
-wget https://github.com/MGuard0303/DiCleavePlus/releases/download/data/model_concat_1.tar.gz
+wget -P ./verification https://github.com/MGuard0303/DiCleavePlus/releases/download/data/model_concat_1.tar.gz
 
-wget https://github.com/MGuard0303/DiCleavePlus/releases/download/data/model_concat_2.tar.gz
+wget -P ./verification https://github.com/MGuard0303/DiCleavePlus/releases/download/data/model_concat_2.tar.gz
 ```
 
 <br>
