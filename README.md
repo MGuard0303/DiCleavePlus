@@ -1,6 +1,9 @@
 # DiCleavePlus
 
-DiCleavePlus is a Transformer-based model for human Dicer cleavage site prediction. We extend Cleavage Pattern by allowing cleavage sites to appear at any interval within the pattern. This architecture employs encoder part of Transformer as the feature extractor and implements attentional feature fusion (AFF) blocks to integrate different features.
+DiCleavePlus is a Transformer-based model for human Dicer cleavage site prediction. We extend Cleavage Pattern by 
+allowing cleavage sites to appear at any interval within the pattern. This architecture employs encoder part of 
+Transformer as the feature extractor and implements attentional feature fusion (AFF) blocks to integrate different 
+features.
 
 <br>
 <br>
