@@ -712,7 +712,7 @@ class DC(nn.Module):
         return x_embed
 
 
-class AblationModelMLP(nn.Module):
+class AblationModelMLP1(nn.Module):
     def __init__(self,
                  embed_feature: int,
                  pattern_size: int,
@@ -752,6 +752,93 @@ class AblationModelMLP(nn.Module):
         )
         self.linear_sequence = nn.Sequential(
             nn.Linear(in_features=200 * embed_feature, out_features=linear_hidden_feature),
+            nn.LeakyReLU(),
+            nn.Dropout()
+        )
+
+        self.aff = AttentionalFeatureFusionLayer(glo_pool_size=linear_hidden_feature, pool_type="1d")
+
+        self.flatten = nn.Flatten()
+
+        self.fc = nn.Sequential(
+            nn.BatchNorm1d(num_features=linear_hidden_feature),
+            nn.Linear(in_features=linear_hidden_feature, out_features=1024),
+            nn.LeakyReLU(),
+            nn.Dropout(),
+            nn.Linear(in_features=1024, out_features=256),
+            nn.LeakyReLU(),
+            nn.Dropout(),
+            nn.Linear(in_features=256, out_features=64),
+            nn.LeakyReLU(),
+            nn.Dropout(),
+            nn.Linear(in_features=64, out_features=32),
+            nn.LeakyReLU(),
+        )
+
+        self.output_layer = nn.Sequential(
+            nn.Linear(in_features=32, out_features=pattern_size),
+            nn.LogSoftmax(dim=1)
+        )
+
+    # Shape of inputs is (Batch, Length, Dimension)
+    def forward(self, sequence: torch.Tensor, pattern: torch.Tensor) -> torch.Tensor:
+        # Forward process of pattern feature.
+        pattern = self.mlp_pattern(pattern)
+        pattern = self.linear_pattern(pattern)
+
+        # Forward process of sequence feature.
+        sequence = self.mlp_sequence(sequence)
+        sequence = self.linear_sequence(sequence)
+
+        embed, _ = self.aff(pattern, sequence)
+        embed = self.flatten(embed)
+        embed = self.fc(embed)
+        embed = self.output_layer(embed)
+
+        return embed
+
+
+class AblationModelMLP2(nn.Module):
+    def __init__(self,
+                 embed_feature: int,
+                 pattern_size: int,
+                 mlp_hidden_feature: int = 2048,
+                 linear_hidden_feature: int = 128,
+                 name: str = "Ablation-Model-MLP"
+                 ) -> None:
+
+        super().__init__()
+
+        self.name = name
+        self.loss_function = nn.NLLLoss()
+
+        # MLP layers for pattern feature.
+        self.mlp_pattern = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(in_features=pattern_size * embed_feature, out_features=mlp_hidden_feature),
+            nn.LeakyReLU(),
+            nn.Linear(in_features=mlp_hidden_feature, out_features=mlp_hidden_feature),
+            nn.LeakyReLU(),
+            nn.Linear(in_features=mlp_hidden_feature, out_features=mlp_hidden_feature)
+        )
+
+        # MLP layers for sequence feature.
+        self.mlp_sequence = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(in_features=200 * embed_feature, out_features=mlp_hidden_feature),
+            nn.LeakyReLU(),
+            nn.Linear(in_features=mlp_hidden_feature, out_features=mlp_hidden_feature),
+            nn.LeakyReLU(),
+            nn.Linear(in_features=mlp_hidden_feature, out_features=mlp_hidden_feature)
+        )
+
+        self.linear_pattern = nn.Sequential(
+            nn.Linear(in_features=2048, out_features=linear_hidden_feature),
+            nn.LeakyReLU(),
+            nn.Dropout()
+        )
+        self.linear_sequence = nn.Sequential(
+            nn.Linear(in_features=2048, out_features=linear_hidden_feature),
             nn.LeakyReLU(),
             nn.Dropout()
         )
