@@ -3,6 +3,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 import torch
 from torch import nn
@@ -104,6 +105,28 @@ def kmer_embed(inputs: list | np.ndarray, vocab: dict, k: int, is_pad: bool = Fa
     t = torch.cat(k_tensors, dim=0)
 
     return t
+
+
+def build_preprocessed(inputs: pd.DataFrame, vocab_sequence: dict, vocab_sec: dict) -> dict:
+    sequence_tensor = kmer_embed(inputs=inputs["sequence"].to_numpy(), vocab=vocab_sequence, k=3, is_pad=True,
+                                 max_length=200, dtype=torch.int64)
+    sec_tensor = kmer_embed(inputs=inputs["sec"].to_numpy(), vocab=vocab_sec, k=3, is_pad=True, max_length=200,
+                            dtype=torch.int64)
+    pattern_tensor = kmer_embed(inputs=inputs["pattern"].to_numpy(), vocab=vocab_sequence, k=3, is_pad=False,
+                                dtype=torch.int64)
+    pattern_sec_tensor = kmer_embed(inputs["pattern_sec"].to_numpy(), vocab=vocab_sec, k=3, is_pad=False,
+                                    dtype=torch.int64)
+    label2_tensor = torch.tensor(inputs["labels2"].to_numpy(), dtype=torch.float32)
+
+    preprocessed = {
+        "sequence": sequence_tensor,
+        "sec": sec_tensor,
+        "pattern": pattern_tensor,
+        "pattern_sec": pattern_sec_tensor,
+        "label2": label2_tensor
+    }
+
+    return preprocessed
 
 
 def separate_tensor(inputs: torch.Tensor, curr_fold: int, total_fold: int, fold_size: int) -> tuple:
