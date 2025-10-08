@@ -117,6 +117,7 @@ def build_preprocessed(inputs: pd.DataFrame, vocab_sequence: dict, vocab_sec: di
     pattern_sec_tensor = kmer_embed(inputs["pattern_sec"].to_numpy(), vocab=vocab_sec, k=3, is_pad=False,
                                     dtype=torch.long)
     label2_tensor = torch.tensor(inputs["label2"].to_numpy(), dtype=torch.float)
+    label2_tensor = label2_tensor.unsqueeze(1)
 
     preprocessed = {
         "sequence": sequence_tensor,
