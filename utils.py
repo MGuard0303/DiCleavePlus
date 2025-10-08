@@ -109,14 +109,14 @@ def kmer_embed(inputs: list | np.ndarray, vocab: dict, k: int, is_pad: bool = Fa
 
 def build_preprocessed(inputs: pd.DataFrame, vocab_sequence: dict, vocab_sec: dict) -> dict:
     sequence_tensor = kmer_embed(inputs=inputs["sequence"].to_numpy(), vocab=vocab_sequence, k=3, is_pad=True,
-                                 max_length=200, dtype=torch.int64)
+                                 max_length=200, dtype=torch.long)
     sec_tensor = kmer_embed(inputs=inputs["sec"].to_numpy(), vocab=vocab_sec, k=3, is_pad=True, max_length=200,
-                            dtype=torch.int64)
+                            dtype=torch.long)
     pattern_tensor = kmer_embed(inputs=inputs["pattern"].to_numpy(), vocab=vocab_sequence, k=3, is_pad=False,
-                                dtype=torch.int64)
+                                dtype=torch.long)
     pattern_sec_tensor = kmer_embed(inputs["pattern_sec"].to_numpy(), vocab=vocab_sec, k=3, is_pad=False,
-                                    dtype=torch.int64)
-    label2_tensor = torch.tensor(inputs["labels2"].to_numpy(), dtype=torch.float32)
+                                    dtype=torch.long)
+    label2_tensor = torch.tensor(inputs["label2"].to_numpy(), dtype=torch.float)
 
     preprocessed = {
         "sequence": sequence_tensor,
