@@ -41,6 +41,10 @@ Please install the GPU version PyTorch.
 
 <br>
 
+### Datasets used in paper
+The datasets used in the paper is stored at https://github.com/MGuard0303/DiCleavePlus/releases/tag/data --> 
+dataset.tar.gz
+
 ### Verification data
 We provide data for verifying the results of our paper in GitHub Releases.
 
